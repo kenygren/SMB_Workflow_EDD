@@ -132,12 +132,13 @@ def ScanType_5(axis1, start1, stop1, numframes1, axis2, start2, stop2, numframes
     scanlist = (5,) + scanlist2[1:] + (get_axis_number(flyaxis),)
     return scanlist
 
-def ScanType_6(axis, start, stop, numframes, flyaxis, offsetbias = 'center'):
+def ScanType_6(axis, start, stop, numframes): #offsetbias = 'center'):
     axisint = get_axis_number(axis)
-    distance = calc_distance(start,stop)
-    updateddistance = calculate_updated_distance_from_num_points(numframes, distance, motor_speed)
-    updatedstart, updatedstop = update_start_end(start, stop, updateddistance - distance, whereoffset=offsetbias)
-    scanlist = (6, axisint, updatedstart, updatedstop, numframes)
+    #distance = calc_distance(start,stop)
+    #updateddistance = calculate_updated_distance_from_num_points(numframes, distance, motor_speed)
+    #updatedstart, updatedstop = update_start_end(start, stop, updateddistance - distance, whereoffset=offsetbias)
+    #scanlist = (6, axisint, updatedstart, updatedstop, numframes)
+    scanlist = (6, axisint, start, stop, numframes)
     return scanlist
 
 ###################
@@ -151,7 +152,12 @@ def update_scan_params(datasets_for_inputfile):
         if dataset['scantype'] == 0:
             optimized_scan_params = ScanType_0()
             optimized_dwelltime = dataset['dwelltime']
-        else: 
+            print_no_change()
+        elif dataset['scantype'] == 6:
+            optimized_scan_params = ScanType_6(dataset['axis1'], dataset['start1'], dataset['end1'], dataset['numframes1'], dataset['offbias'])
+            optimized_dwelltime = dataset['dwelltime']
+            print_no_change()
+        else:
             if dataset['scantype'] == 1:
                 optimized_scan_params = ScanType_1(dataset['axis1'], dataset['start1'], dataset['end1'], dataset['numframes1'], dataset['offbias'])
             elif dataset['scantype'] == 2:
@@ -162,22 +168,21 @@ def update_scan_params(datasets_for_inputfile):
                 optimized_scan_params = ScanType_4(dataset['axis1'], dataset['start1'], dataset['end1'], dataset['numframes1'], dataset['offbias'])
             elif dataset['scantype'] == 5:
                 optimized_scan_params = ScanType_5(dataset['axis1'], dataset['start1'], dataset['end1'], dataset['numframes1'],dataset['axis2'], dataset['start2'], dataset['end2'], dataset['numframes2'], dataset['flyaxis'], dataset['offbias'] )
-            elif dataset['scantype'] == 6:
-                optimized_scan_params = ScanType_6(dataset['axis1'], dataset['start1'], dataset['end1'], dataset['numframes1'], dataset['offbias'])
 
             ctime_input = optimized_scan_params[2:5] + (dataset['dwelltime'],motor_speed,)
             optimized_dwelltime = update_dwelltime(*ctime_input)
+            print_optimized_value_changes_start_end(dataset['dataset_ID'], dataset['start1'], dataset['end1'], optimized_scan_params[2], optimized_scan_params[3])
+            print_optimized_dwell_time(dataset['dataset_ID'], dataset['dwelltime'], optimized_dwelltime)
 
         optimized_scan_params_summary.append(optimized_scan_params)
         optimized_dwelltime_summary.append(optimized_dwelltime)  
-        print_optimized_value_changes_start_end(dataset['dataset_ID'], dataset['start1'], dataset['end1'], dataset['numframes1'], dataset['start2'], dataset['end2'], dataset['numframes2'],)
-        print_optimized_dwell_time(dataset['dataset_ID'], dataset['dwelltime'], dwelltime)
+        
 
     return optimized_scan_params_summary, optimized_dwelltime_summary
 
-###################
-#input textfile writer
-###################
+#############################
+### input textfile writer ###
+#############################
 
 def tuple_dataset_values(datasets_for_inputfile, lab_ref_points, optimized_dwelltime_summary, optimized_scan_params_summary, f, ome = 0, omeoff = 0, IntStart = 1):
     dataset_for_writer = []
@@ -244,7 +249,6 @@ def combine_data_input(f, IntStart, DataNo, Config,  XYZ, sq, offset, CtTime, bw
         else:
             raise RuntimeError('Input Scan format is incorrect.')
     
-    
     # 
     for ii in range(XYZ.shape[0]):
         
@@ -253,7 +257,6 @@ def combine_data_input(f, IntStart, DataNo, Config,  XYZ, sq, offset, CtTime, bw
         
         info_combined = ((core_string + scan_string) % (core_info + scan_info))
         appended_scans.append(info_combined)
-    
     
     return appended_scans
 
@@ -279,13 +282,13 @@ def write_OuputForSpec2024_with_append(_to_write):
     return 'Done'
 
 def print_optimized_value_changes_start_end(dataset_no, targeted_value_start, targeted_value_end, actual_value_start, actual_value_end):
-    print ("For Dataset %d, The TARGETED start and end values were [%d, %d]" % (dataset_no, targeted_value_start,targeted_value_end))
-    print ("For Dataset %d, The OPTIMIZED start and end values are [%d, %d]" % (dataset_no, actual_value_start,actual_value_end))
+    print ("For Dataset %d, The TARGETED start and end values were [%f, %f]" % (dataset_no, targeted_value_start,targeted_value_end))
+    print ("For Dataset %d, The OPTIMIZED start and end values are [%f, %f]" % (dataset_no, actual_value_start,actual_value_end))
     return
 
-def print_optimized_dwell_time(targeted_dwelltime, actual_dwelltime):
-    print ("For Datset %d, The TARGETED dwelltime was %d" % (dataset_no, targeted_dwelltime))
-    print ("For Datset %d, The OPTIMIZED dwelltime is %d" % (dataset_no, actual_dwelltime))
+def print_optimized_dwell_time(dataset_no, targeted_dwelltime, actual_dwelltime):
+    print ("For Datset %d, The TARGETED dwelltime was %f" % (dataset_no, targeted_dwelltime))
+    print ("For Datset %d, The OPTIMIZED dwelltime is %f" % (dataset_no, actual_dwelltime))
     return
     
 def print_no_change(dataset_no):

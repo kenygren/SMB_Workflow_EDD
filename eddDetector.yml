@@ -1,0 +1,83 @@
+#EDD detector configuration. Fields populated in the EnergyDispersiveDiffractionDetector Class: 
+
+#class EnergyDispersiveDiffractionDetector: 
+#    """Single or Multi-element detector
+#       
+#       This class is designed for a germanium-based point-detector 
+#       instrument & geometry that resolves the energy of the 
+#       diffracted beam in an energy dispersive diffraction experiment. 
+#       It is independent of the PlanarDetector class and contains
+#       information requisit to reproduce the instrument, including the 
+#       position and sizes of detectors and collimating slits. 
+
+#    """
+#    @property
+#    def detector_type(self):
+#        return 'energy_diffraction'
+#......see hexrd documentation for more
+
+#----------------------
+## THE EDD instrument configuration yaml is proposed as follows ###
+#----------------------
+
+#######Instrument is built on a PER DATASET basis#####
+
+#default detector type in yaml
+#add azimuthal width
+beam: 
+  beam_defining_slit: 
+    beam_defining_size: [x,z] or diameter in mm #this is the EFFECTIVE beamsize when working with a flyscan
+    beam_defining_shape: <'square' - beam_defining_size 2, x then y or 'circle' - beam_defining_size 1 - diameter>
+  beam_energy_range: [50,200]
+
+detector_slits: 
+  downstream1_distance: <distance from diffraction volume center>
+  downstream2_distance: <distance from diffraction volume center>
+
+id:
+detectors:
+  detector_type: energy_dispersive
+  composite_instrument: 
+    group_name: 'element23'
+      slit_width: <from spec.log> #downstream slits
+      TOA: <from spec.log> 
+      distance: <from spec.log> #between sample and detector
+      #use it for overriding individual fields and/or generating 
+    
+  edd01: #should this be edd00? #lookup table for the keys for the .h5 will need to be incorporated into CHAP pipeline 
+    position: 
+       TOA: <2theta angle as a float>
+       eta: <azimuthal angle as a float - counter clockwise positive> (fixed for detector) #auto populated by the input
+       eta_width: 12 mm #determined from shielding before detector
+       distance: <distance from diffraction volume center>
+       slit_width: <estimated from global width, updated from diffraction volume calculation>
+    group: 'element23'
+    ROI: 
+       energy_range: [50,200] #incoming beam + detector range for diffraction information
+    diffraction_volume: 
+       dv_depth_y: <calculated from scan>
+    energy_calibration:
+       a:
+       b:
+       c:
+       calibrant_method: ceo2_fluoresence
+       calibrant_energy: [peak1], [peak2], [peak3]
+
+  edd02: #should this be edd00? #lookup table for the keys for the .h5 will need to be incorporated into CHAP pipeline 
+    position: 
+       TOA: <2theta angle as a float>
+       eta: <azimuthal angle as a float - counter clockwise positive> (fixed for detector) #auto populated by the input
+       eta_width: 12 mm #determined from shielding before detector
+       distance: <distance from diffraction volume center>
+       slit_width: <estimated from global width, updated from diffraction volume calculation>
+    group: 'element23'
+    ROI: 
+       energy_range: [50,200] #incoming beam + detector range for diffraction information
+    diffraction_volume: 
+       dv_depth_y: <calculated from scan>
+    energy_calibration:
+       a:
+       b:
+       c:
+       calibrant_method: ceo2_fluoresence
+       calibrant_energy: [peak1], [peak2], [peak3]

@@ -170,8 +170,10 @@ def update_scan_params(datasets_for_inputfile):
 
         optimized_scan_params_summary.append(optimized_scan_params)
         optimized_dwelltime_summary.append(optimized_dwelltime)  
-    return optimized_scan_params_summary, optimized_dwelltime_summary
+        print_optimized_value_changes_start_end(dataset['dataset_ID'], dataset['start1'], dataset['end1'], dataset['numframes1'], dataset['start2'], dataset['end2'], dataset['numframes2'],)
+        print_optimized_dwell_time(dataset['dataset_ID'], dataset['dwelltime'], dwelltime)
 
+    return optimized_scan_params_summary, optimized_dwelltime_summary
 
 ###################
 #input textfile writer

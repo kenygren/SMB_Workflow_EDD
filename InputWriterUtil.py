@@ -6,7 +6,10 @@ import numpy as np
 # from hexrd_extras import core_fem as fem
 #import PowderFittingTools as pwd
 
-motor_speed = 3937.01 #hardcoded motor speed for rsampX, rsampY, rsampZ
+motor_x_speed = 3937.01 #hardcoded motor speed for rsampX, rsampY, rsampZ
+motor_y_speed = 3937.01 #hardcoded motor speed for rsampX, rsampY, rsampZ
+motor_z_speed = 3937.01 #hardcoded motor speed for rsampX, rsampY, rsampZ
+motor_w_speed = 3937.01 #hardcoded motor speed for rsampX, rsampY, rsampZ
 per_scan_overhead = 5 # 4 for scans themselves, added 1 for motor motions 
 
 ###################
@@ -43,6 +46,10 @@ def combine_and_write_datasets(datasets_for_inputfile, lab_ref_points, f, ome, o
 
 def get_axis_number(axis):
     axis_mapping = {'x': 1, 'y': 2, 'z': 3, 'w': 4}
+    return axis_mapping.get(axis, None)
+
+def get_motor_speed(axis):
+    axis_mapping = {'x': motor_x_speed, 'y': motor_y_speed, 'z': motor_z_speed, 'w': motor_w_speed }
     return axis_mapping.get(axis, None)
 
 ###################
@@ -115,6 +122,7 @@ def ScanType_0():
 def ScanType_1(axis, start, stop, numframes, offsetbias = 'center'):
     axisint = get_axis_number(axis)
     distance = calc_distance(start,stop)
+    motor_speed = get_motor_speed(axis)
     updateddistance = calculate_updated_distance_from_num_points(numframes, distance, motor_speed)
     updatedstart, updatedstop = update_start_end(start, stop, updateddistance - distance, whereoffset=offsetbias)
     scanlist = (1, axisint, updatedstart, updatedstop, numframes)
@@ -125,9 +133,11 @@ def ScanType_2(axis1, start1, stop1, numframes1, axis2, start2, stop2, numframes
     axisint2 = get_axis_number(axis2)
     distance1 = calc_distance(start1,stop1)
     distance2 = calc_distance(start2,stop2)
-    updateddistance1 = calculate_updated_distance_from_num_points(numframes1, distance1, motor_speed)
+    motor_speed1 = get_motor_speed(axis1)
+    motor_speed2 = get_motor_speed(axis2)
+    updateddistance1 = calculate_updated_distance_from_num_points(numframes1, distance1, motor_speed1)
     updatedstart1, updatedstop1 = update_start_end(start1, stop1, updateddistance1 - distance1, whereoffset=offsetbias)
-    updateddistance2 = calculate_updated_distance_from_num_points(numframes2, distance2, motor_speed)
+    updateddistance2 = calculate_updated_distance_from_num_points(numframes2, distance2, motor_speed2)
     updatedstart2, updatedstop2 = update_start_end(start2, stop2, updateddistance2 - distance2, whereoffset=offsetbias)
     scanlist = (2, axisint1, updatedstart1, updatedstop1, numframes1, axisint2, updatedstart2, updatedstop2, numframes2)
     return scanlist
@@ -138,11 +148,8 @@ def ScanType_3(axis1, start1, stop1, numframes1, axis2, start2, stop2, numframes
     return scanlist
 
 def ScanType_4(axis, start, stop, numframes, offsetbias = 'center'):
-    axisint = get_axis_number(axis)
-    distance = calc_distance(start,stop)
-    updateddistance = calculate_updated_distance_from_num_points(numframes, distance, motor_speed)
-    updatedstart, updatedstop = update_start_end(start, stop, updateddistance - distance, whereoffset=offsetbias)
-    scanlist = (4, axisint, updatedstart, updatedstop, numframes)
+    scanlist1 = ScanType_1(axis, start, stop, numframes, offsetbias = 'center')
+    scanlist = (4,) + scanlist1[1:]
     return scanlist
 
 def ScanType_5(axis1, start1, stop1, numframes1, axis2, start2, stop2, numframes2, flyaxis, offsetbias = 'center'):
@@ -187,6 +194,7 @@ def update_scan_params(datasets_for_inputfile):
             elif dataset['scantype'] == 5:
                 optimized_scan_params = ScanType_5(dataset['axis1'], dataset['start1'], dataset['end1'], dataset['numframes1'],dataset['axis2'], dataset['start2'], dataset['end2'], dataset['numframes2'], dataset['flyaxis'], dataset['offbias'] )
 
+            motor_speed = get_motor_speed(dataset['axis1'])
             ctime_input = optimized_scan_params[2:5] + (dataset['dwelltime'],motor_speed,)
             optimized_dwelltime = update_dwelltime(*ctime_input)
             print_optimized_value_changes_start_end(dataset['dataset_ID'], dataset['start1'], dataset['end1'], optimized_scan_params[2], optimized_scan_params[3])

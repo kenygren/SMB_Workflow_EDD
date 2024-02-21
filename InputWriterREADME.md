@@ -212,3 +212,13 @@ Two fields end up being changed to optimized the scan strategy:
 > I need to work with Chris to build this section
 
 ### ScanTypes ###
+
+![scantype_image](./figures/scantypes.png)
+
+#adding more text
+
+### Resulting Input Array ###
+
+> Here we will describe the columns of the resulting input array - probably just going to start by grabbing the table from the google doc
+
+### Making more changes ###

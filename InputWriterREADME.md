@@ -49,8 +49,7 @@ The InputWriter_template.py has the following structure:
         ##### This section is user-defined #######
         ##### See reference examples #############
         ##########################################
-        
-        ome = 0.0
+0.0
         omeoff = 0.0
  
         # lab_ref_points_<datasetno> is an array of points in the lab reference frame generated in this section:
@@ -213,12 +212,28 @@ Two fields end up being changed to optimized the scan strategy:
 
 ### ScanTypes ###
 
+The seven current scantypes are illustrated in the figure below: 
+
 ![scantype_image](./figures/scantypes.png)
 
-#adding more text
+<small>
 
+| ScanType                | ScanType Int | SPEC Building Block | At each reference point | Data Integration Default | 
+| -----------             | ------------ | -----------         |-----------    | -----------|
+|Point                    | 0            | tseries             | Stop, take data | None |
+|Flyscan                  | 1            | flydscan*           | Flyscan relative to reference point, framing at intervals between two positions | None |
+|Flymesh                  | 2            | flydmesh*           | Flyscan relative to reference point, framing at intervals between two positions along fly axis, stepping in the second axis | None |
+|PointGrid                | 3            | flydmesh*           | Stop, take small flymesh relative to reference point | integrate flymesh spectra at each point |
+|Oversampling             | 4            | flydscan*           | Flyscan relative to reference point, framing at SMALL, OVERLAPPING intervals between two positions | integrate spectra along flyaxis over some binning range |
+|PointGrid + Overesampling| 5            | flydmesh*           | Stop, take small flymesh relative to reference point, step in third axis in SMALL, OVERLAPPING intervals | integrate along oversampled "bin_axis"
+|Dscan                    | 6            | dscan               | Dscan relative to a reference point, stopping stepwise at intervals and taking data | None
+
+</small>
+
+*note, all flyscans are dscan style - so relative positions are used w.r.t. the reference point
 ### Resulting Input Array ###
 
-> Here we will describe the columns of the resulting input array - probably just going to start by grabbing the table from the google doc
+For details on the input datafile, please see the current commissioning notes: 
+[Commissioning Details For Input Arrays](https://docs.google.com/document/d/1IyG426aaRIGqH2YIqSCtYHjca22qHrm_iJxsmpZeNPk/edit)
 
-### Making more changes ###
+

@@ -3,9 +3,6 @@
 
 import numpy as np
 
-# from hexrd_extras import core_fem as fem
-#import PowderFittingTools as pwd
-
 motor_x_speed = 3937.01 #hardcoded motor speed for rsampX, rsampY, rsampZ
 motor_y_speed = 3937.01 #hardcoded motor speed for rsampX, rsampY, rsampZ
 motor_z_speed = 3937.01 #hardcoded motor speed for rsampX, rsampY, rsampZ

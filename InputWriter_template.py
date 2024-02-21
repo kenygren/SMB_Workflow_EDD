@@ -16,7 +16,8 @@ import # --------- import dependecies ----------
         
         ome = 0.0
         omeoff = 0.0
- 
+        omecorr = 0.5
+
         # lab_ref_points_<datasetno> is an array of points in the lab reference frame generated in this section:
 
         lab_ref_points_1 = XYZAll 

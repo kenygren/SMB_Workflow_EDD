@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Feb  5 14:11:35 2024
-
-@author: cbud
-
-Modified and comments added on 2024-02-06 by PK
-"""
 
 import numpy as np
 
@@ -91,6 +84,7 @@ def update_start_end(start, end, offset, whereoffset = 'center'):
 def calc_distance(start,stop):
     distance = abs(start) + abs(stop)
     return distance
+
 
 ###################
 #scantype parameter writers 
@@ -284,6 +278,16 @@ def write_OuputForSpec2024_with_append(_to_write):
 
  ##BUILDING CLASS:### Not used yet
 
+def print_optimized_value_changes_start_end(dataset_no, targeted_value_start, targeted_value_end, actual_value_start, actual_value_end):
+    print ("For Dataset %d, The TARGETED start and end values were [%d, %d]" (dataset_no, targeted_value_start,targeted_value_end))
+    print ("For Dataset %d, The OPTIMIZED start and end values are [%d, %d]" (dataset_no, actual_value_start,actual_value_end))
+
+def print_optimized_dwell_time(targeted_dwelltime, actual_dwelltime):
+    print ("For Datset %d, The TARGETED dwelltime was %d)
+    print ("For Datset %d, The OPTIMIZED dwelltime is %d)
+
+def print_no_change(dataset_no):
+    print ("For Dataset %d, ScanType not flyscan - all TARGET values used as is)
 
 class ID_config: 
     def __init__(self, scan_no, dataset_no, configuration_no):

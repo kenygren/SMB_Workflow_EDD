@@ -276,18 +276,22 @@ def write_OuputForSpec2024_with_append(_to_write):
     
     return 'Done'
 
- ##BUILDING CLASS:### Not used yet
-
 def print_optimized_value_changes_start_end(dataset_no, targeted_value_start, targeted_value_end, actual_value_start, actual_value_end):
-    print ("For Dataset %d, The TARGETED start and end values were [%d, %d]" (dataset_no, targeted_value_start,targeted_value_end))
-    print ("For Dataset %d, The OPTIMIZED start and end values are [%d, %d]" (dataset_no, actual_value_start,actual_value_end))
+    print ("For Dataset %d, The TARGETED start and end values were [%d, %d]" % (dataset_no, targeted_value_start,targeted_value_end))
+    print ("For Dataset %d, The OPTIMIZED start and end values are [%d, %d]" % (dataset_no, actual_value_start,actual_value_end))
+    return
 
 def print_optimized_dwell_time(targeted_dwelltime, actual_dwelltime):
-    print ("For Datset %d, The TARGETED dwelltime was %d)
-    print ("For Datset %d, The OPTIMIZED dwelltime is %d)
-
+    print ("For Datset %d, The TARGETED dwelltime was %d" % (dataset_no, targeted_dwelltime))
+    print ("For Datset %d, The OPTIMIZED dwelltime is %d" % (dataset_no, actual_dwelltime))
+    return
+    
 def print_no_change(dataset_no):
-    print ("For Dataset %d, ScanType not flyscan - all TARGET values used as is)
+    print ("For Dataset %d, ScanType not flyscan - all TARGET values used as is" % (dataset_no))
+    return
+
+
+##BUILDING CLASS:### Not used yet
 
 class ID_config: 
     def __init__(self, scan_no, dataset_no, configuration_no):

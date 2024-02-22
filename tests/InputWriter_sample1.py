@@ -56,8 +56,7 @@ BoundY = [-5, 5]
 # Determine the data pts on the edge:
 x = np.linspace(BoundX[0], BoundX[1], dx)
 y = np.linspace(BoundY[0], BoundY[1], dy)
-print( x )
-print( 'AverageZ', np.mean(y) )
+
 xx, yy = np.meshgrid(x, y)
 
 ##### For plotting #####

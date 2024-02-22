@@ -282,6 +282,14 @@ Two fields end up being changed to optimized the scan strategy:
 
     Due to the way data is collected during a flyscan by our system, the dwelltime needs to be optimized in order to achieve the desired flyscan intervals / collection behavior. Note: this value can be as much as a few seconds different than the targeted dwelltime - so be conservative in the targeted dwelltime. There are no user-defined options for how this optimization is performed. 
 
+### Print Statements ###
+
+The `InputWriter_template.py` prints out a series of statements:
+-  to convey how the optimization has modified the scan series
+- how long the scans should take
+
+See example here: 
+![printout](./figures/cliprout.png)
 
 ### Resulting Input Array ###
 

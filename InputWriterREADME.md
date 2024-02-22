@@ -11,8 +11,9 @@ This input file consists of many columns of data that can be described in 4 cate
 4. **Scan-Strategy Parameters** for different scan types (e.g. point-dwell, flyscanning, etc.)
 
 To generate an input textfile, the following two items must be populated/provided by the user:
--  *Reference Point Array*
-- *EDD Configuration File/Dictionary* 
+
+-  *Reference Point List*
+- *EDD Input Configuration Dictionary* 
 
 These items will be incorporated into an `InputWriter_template.py` templated script - designed to be edited by the user. 
 
@@ -43,7 +44,7 @@ The InputWriter_template.py has the following structure:
         filename = 'OutputForSpec_date_sample.txt'
         f = base_dir+filename_suffix
 
-        # ---------- generate reference points ----------
+        # ---------- generate reference point list (one per dataset) ----------
         
         ##########################################
         ##### This section is user-defined #######
@@ -55,7 +56,7 @@ The InputWriter_template.py has the following structure:
         lab_ref_points_1 = XYZWs
         lab_ref_points_2 = XYZWs_2
 
-        # ---------- configuration for each dataset  -----------
+        # ---------- EDD input configuration dictionary (one per dataset) -----------
 
         config_dataset_1 = {
             'dataset_ID': 1,
@@ -120,7 +121,45 @@ Defining a **dataset**:
 - each **dataset** should be assigned a *unique integer number* by the user; there should not be repeated dataset numbers within a sample directory
 - The ScanType must be the same for all scans within a dataset; if more than one ScanType is desired for a sample, it should be handled under a unique dataset ID
 
-### EDD Configuration 
+### ScanTypes ###
+
+The seven current scantypes are illustrated in the figure below: 
+
+![scantype_image](./figures/scantypes.png)
+
+<small>
+
+| ScanType                | ScanType Int | SPEC Building Block | At each reference point | Data Integration Default | 
+| -----------             | ------------ | -----------         |-----------    | -----------|
+|Point                    | 0            | tseries             | Stop, take data | None |
+|Flyscan                  | 1            | flydscan*           | Flyscan relative to reference point, framing at intervals between two positions | None |
+|Flymesh                  | 2            | flydmesh*           | Flyscan relative to reference point, framing at intervals between two positions along fly axis, stepping in the second axis | None |
+|PointGrid                | 3            | flydmesh*           | Stop, take small flymesh relative to reference point | integrate flymesh spectra at each point |
+|Oversampling             | 4            | flydscan*           | Flyscan relative to reference point, framing at SMALL, OVERLAPPING intervals between two positions | integrate spectra along flyaxis over some binning range |
+|PointGrid + Overesampling| 5            | flydmesh*           | Stop, take small flymesh relative to reference point, step in third axis in SMALL, OVERLAPPING intervals | integrate along oversampled "bin_axis"
+|Dscan                    | 6            | dscan               | Dscan relative to a reference point, stopping stepwise at intervals and taking data | None
+
+</small>
+
+### Creating Reference Point List ###
+
+A **Reference Point List** houses all the reference points for every **scan** that will be executed in the dataset. All scans move RELATIVE to this starting point. 
+
+The reference point list is *currently* defined in the *laboratory reference frame* (X-ray reference frame). 
+
+The resulting reference list should be formatted as a vertical stack, where the *number of rows* is the *number of total scans*: 
+        
+    reference_point_list = [[ Xlab, Ylab, Zlab, W, W-offset ]
+                            [ Xlab, Ylab, Zlab, W, W-offset ]    
+                            [ Xlab, Ylab, Zlab, W, W-offset ]
+                            [ Xlab, Ylab, Zlab, W, W-offset ]
+                            [ Xlab, Ylab, Zlab, W, W-offset ] 
+                            ...............
+                            [ Xlab, Ylab, Zlab, W, W-offset ]]
+
+Where each row has a unique [ X <sub>lab</sub>, Y<sub>lab</sub>, Z<sub>lab</sub>, W, Wcorr ] position. W, AKA "omega", is the rotation about lab Z and provides a value that "squares" the sample to the X-ray beam. The W-offset prescribes a relative omega position from the "squared" omega. 
+
+### EDD Input Configuration Dictionary
 
 The EDD configuration is currently a dictionary defined within the `InputWriter_template.py` file. This dictionary holds the user-defined dataset, scan, and intrument configuration variables. These variables should be input as what the user is TARGETING for data collection. The input array writer will take these values and produce an optimized set of variables that will be used during data collection. Any discrepancies in the TARGET data collection values and ACTUAL data collection variables are typically exetremely small. Note: *Data analysis*  uses only the ACTUAL recorded data collection parameters and instrument state, not the TARGET values. 
 
@@ -166,15 +205,55 @@ An example annotated configuration dictionary is below for dataset '4' made up o
 
 *SCAN SPECIFIC REQUIREMENTS*: *keys* are unique for the different scantypes as described below (*cf* ScanTypes Documentation): 
 
-        ScanType 0: None
+ScanType = 0 : 
 
-        ScanTypes 1 & 4 : 'axis1', 'start1', 'end1', 'numframes1', 'offbias'
+     <no additional dictionary keys>
 
-        ScanTypes 2 & 3 : 'axis1', 'start1', 'end1', 'numframes1', 'axis2', 'start2', 'end2', 'numframes2','offbias'
+ScanTypes 1 & 4 : 
 
-        ScanType 5 : 'axis1', 'start1', 'end1', 'numframes1', 'axis2', 'start2', 'end2', 'numframes2','offbias'
+    'axis1'      # string of motor from the following options:  ['w','x','y','z']
+    'start1'     # RELATIVE start position of scans from reference point in LAB ref frame - float
+    'end1'       # RELATIVE end position of scans from reference point in LAB ref frame - float
+    'numframes1' # number of frames taken over the range between start and end points
+    'offbias'    # how offset from optimizer is applied for flyscan : ['center', fix_start', 'fix_end']
 
-        ScanType 6 :  'axis1', 'start1', 'end1', 'numframes1'
+ScanTypes 2 & 3 : axis 1 is the flyscan motor, axis 2 moves in a stepwise fashion
+            
+
+    'axis1'      # string of motor from the following options:  ['w','x','y','z']
+    'start1'     # RELATIVE start position of scans from reference point in LAB ref frame - float
+    'end1'       # RELATIVE end position of scans from reference point in LAB ref frame - float
+    'numframes1' # number of frames taken over the range between start and end points
+
+    'offbias'    # how offset from optimizer is applied for flyscan: ['center', fix_start', 'fix_end']
+
+    'axis2'      # string of motor from the following options:  ['w','x','y','z']
+    'start2'     # RELATIVE start position of scans from reference point in LAB ref frame - float
+    'end2'       # RELATIVE end position of scans from reference point in LAB ref frame - float
+    'numframes2' # number of frames taken over the range between start and end points
+
+ScanType 5 : axis 1 is the flyscan motor, axis 2 moves in a stepwise fashion
+
+    'axis1'      # string of motor from the following options:  ['w','x','y','z']
+    'start1'     # RELATIVE start position of scans from reference point in LAB ref frame - float
+    'end1'       # RELATIVE end position of scans from reference point in LAB ref frame - float
+    'numframes1' # number of frames taken over the range between start and end points
+
+    'offbias'    # how offset from optimizer is applied for flyscan: ['center', fix_start', 'fix_end']
+
+    'axis2'      # string of motor from the following options:  ['w','x','y','z']
+    'start2'     # RELATIVE start position of scans from reference point in LAB ref frame - float
+    'end2'       # RELATIVE end position of scans from reference point in LAB ref frame - float
+    'numframes2' # number of frames taken over the range between start and end points
+
+    'flyaxis'    # axis for integration
+
+ScanType 6 : #dscan does not have an optimization#
+
+    'axis1'      # string of motor from the following options:  ['w','x','y','z']
+    'start1'     # RELATIVE start position of scans from reference point in LAB ref frame - float
+    'end1'       # RELATIVE end position of scans from reference point in LAB ref frame - float
+    'numframes1' # number of frames taken over the range between start and end points
 
 Note on using dictionary : This file can also be made into a standalone textfile that is read into the python script. 
 
@@ -204,46 +283,6 @@ Two fields end up being changed to optimized the scan strategy:
     Due to the way data is collected during a flyscan by our system, the dwelltime needs to be optimized in order to achieve the desired flyscan intervals / collection behavior. Note: this value can be as much as a few seconds different than the targeted dwelltime - so be conservative in the targeted dwelltime. There are no user-defined options for how this optimization is performed. 
 
 
-### Creating Reference Point List ###
-
-A **Reference Point List** houses all the reference points for every **scan** that will be executed in the dataset. All scans move RELATIVE to this starting point. 
-
-The reference point list is *currently* defined in the *laboratory reference frame* (X-ray reference frame). 
-
-The resulting reference list should be formatted as a vertical stack, where the *number of rows* is the *number of total scans*: 
-        
-    reference_point_list = [[ Xlab, Ylab, Zlab, W, W-offset ]
-                            [ Xlab, Ylab, Zlab, W, W-offset ]    
-                            [ Xlab, Ylab, Zlab, W, W-offset ]
-                            [ Xlab, Ylab, Zlab, W, W-offset ]
-                            [ Xlab, Ylab, Zlab, W, W-offset ] 
-                            ...............
-                            [ Xlab, Ylab, Zlab, W, W-offset ]]
-
-Where each row has a unique [ X <sub>lab</sub>, Y<sub>lab</sub>, Z<sub>lab</sub>, W, Wcorr ] position. W, AKA "omega", is the rotation about lab Z and provides a value that "squares" the sample to the X-ray beam. The W-offset prescribes a relative omega position from the "squared" omega. 
-
-
-### ScanTypes ###
-
-The seven current scantypes are illustrated in the figure below: 
-
-![scantype_image](./figures/scantypes.png)
-
-<small>
-
-| ScanType                | ScanType Int | SPEC Building Block | At each reference point | Data Integration Default | 
-| -----------             | ------------ | -----------         |-----------    | -----------|
-|Point                    | 0            | tseries             | Stop, take data | None |
-|Flyscan                  | 1            | flydscan*           | Flyscan relative to reference point, framing at intervals between two positions | None |
-|Flymesh                  | 2            | flydmesh*           | Flyscan relative to reference point, framing at intervals between two positions along fly axis, stepping in the second axis | None |
-|PointGrid                | 3            | flydmesh*           | Stop, take small flymesh relative to reference point | integrate flymesh spectra at each point |
-|Oversampling             | 4            | flydscan*           | Flyscan relative to reference point, framing at SMALL, OVERLAPPING intervals between two positions | integrate spectra along flyaxis over some binning range |
-|PointGrid + Overesampling| 5            | flydmesh*           | Stop, take small flymesh relative to reference point, step in third axis in SMALL, OVERLAPPING intervals | integrate along oversampled "bin_axis"
-|Dscan                    | 6            | dscan               | Dscan relative to a reference point, stopping stepwise at intervals and taking data | None
-
-</small>
-
-*note, all flyscans are dscan style - so relative positions are used w.r.t. the reference point
 ### Resulting Input Array ###
 
 For details on the input datafile, please see the current commissioning notes: 

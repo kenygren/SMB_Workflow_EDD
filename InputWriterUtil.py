@@ -13,11 +13,13 @@ per_scan_overhead = 5 # 4 for scans themselves, added 1 for motor motions
 #primary function: 
 ###################
 
-def calculate_dataset_collectiontimes(datasets_for_inputfile, num_scans, optimized_scan_params_summary, optimized_dwelltime_summary, per_scan_overhead):
+def calculate_dataset_collectiontimes(datasets_for_inputfile, lab_ref_points, optimized_scan_params_summary, optimized_dwelltime_summary, per_scan_overhead):
+    total_time = []
     for datasetidx in range(0,len(datasets_for_inputfile)):
         dataset = datasets_for_inputfile[datasetidx]
         optimized_scan_params = optimized_scan_params_summary[datasetidx]
         optimized_dwelltime = optimized_dwelltime_summary[datasetidx]
+        num_scans = len(lab_ref_points[datasetidx])
         if dataset['scantype'] == 0 :
             dataset_time = (num_scans * (optimized_dwell + per_scan_overhead))
         elif dataset['scantype'] == 1 or 4 or 6 :
@@ -25,13 +27,14 @@ def calculate_dataset_collectiontimes(datasets_for_inputfile, num_scans, optimiz
             #optimized_scan_params[4] = numframes1 , optimized_scan_params[8] - numframes2 #will make more sense with class
         elif dataset['scantype'] == 2 or 3 or 5 : 
             dataset_time = (num_scans * per_scan_overhead) + (num_scans * ((optimized_scan_params[4] * optimized_dwelltime)*(optimized_scan_params[8]))) + (optimized_scan_params[8]*per_scan_overhead)
-        print("Dataset %d: has %d scans" % ( dataset['dataset_ID'], num_scans))
-    print("Dataset %d will take approximately %f hours to complete" % (dataset['dataset_ID'], dataset_time/60/60))
+        print("Dataset %d has %d scans and will take approximately %f hours to complete" % (dataset['dataset_ID'], num_scans, dataset_time/60/60))
+        total_time.append(dataset_time)
+    print("The entire inputfile array will take approx. %f hours to complete" % ((sum(total_time)/60/60)))
     return
 
 def combine_and_write_datasets(datasets_for_inputfile, lab_ref_points, f): 
     optimized_scan_params_summary, optimized_dwelltime_summary = update_scan_params(datasets_for_inputfile)
-    calculate_dataset_collectiontimes(datasets_for_inputfile, len(lab_ref_points[0]), optimized_scan_params_summary, optimized_dwelltime_summary, per_scan_overhead)
+    calculate_dataset_collectiontimes(datasets_for_inputfile, lab_ref_points, optimized_scan_params_summary, optimized_dwelltime_summary, per_scan_overhead)
     datasets_for_writer = tuple_dataset_values(datasets_for_inputfile,lab_ref_points, optimized_dwelltime_summary, optimized_scan_params_summary, f)
     write_OuputForSpec2024_with_append(datasets_for_writer)
 

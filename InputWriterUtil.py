@@ -22,11 +22,11 @@ def calculate_dataset_collectiontimes(datasets_for_inputfile, lab_ref_points, op
         num_scans = len(lab_ref_points[datasetidx])
         if dataset['scantype'] == 0 :
             dataset_time = (num_scans * (optimized_dwell + per_scan_overhead))
-        elif dataset['scantype'] == 1 or 4 or 6 :
+        elif dataset['scantype'] in [1, 4, 6 ]:
             dataset_time = (num_scans * per_scan_overhead) + (num_scans * optimized_scan_params[4] * optimized_dwelltime)  
             #optimized_scan_params[4] = numframes1 , optimized_scan_params[8] - numframes2 #will make more sense with class
-        elif dataset['scantype'] == 2 or 3 or 5 : 
-            dataset_time = (num_scans * per_scan_overhead) + (num_scans * ((optimized_scan_params[4] * optimized_dwelltime)*(optimized_scan_params[8]))) + (optimized_scan_params[8]*per_scan_overhead)
+        elif dataset['scantype'] in [2 , 3 , 5] : 
+            dataset_time = (num_scans * per_scan_overhead) + (num_scans * ((optimized_scan_params[4] * optimized_dwelltime * optimized_scan_params[8])) + (optimized_scan_params[8] * per_scan_overhead))
         print("Dataset %d has %d scans and will take approximately %f hours to complete" % (dataset['dataset_ID'], num_scans, dataset_time/60/60))
         total_time.append(dataset_time)
     print("The entire inputfile array will take approx. %f hours to complete" % ((sum(total_time)/60/60)))

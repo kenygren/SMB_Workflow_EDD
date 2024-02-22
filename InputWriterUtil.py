@@ -3,9 +3,6 @@
 
 import numpy as np
 
-# from hexrd_extras import core_fem as fem
-#import PowderFittingTools as pwd
-
 motor_x_speed = 3937.01 #hardcoded motor speed for rsampX, rsampY, rsampZ
 motor_y_speed = 3937.01 #hardcoded motor speed for rsampX, rsampY, rsampZ
 motor_z_speed = 3937.01 #hardcoded motor speed for rsampX, rsampY, rsampZ
@@ -16,11 +13,13 @@ per_scan_overhead = 5 # 4 for scans themselves, added 1 for motor motions
 #primary function: 
 ###################
 
-def calculate_dataset_collectiontimes(datasets_for_inputfile, num_scans, optimized_scan_params_summary, optimized_dwelltime_summary, per_scan_overhead):
+def calculate_dataset_collectiontimes(datasets_for_inputfile, lab_ref_points, optimized_scan_params_summary, optimized_dwelltime_summary, per_scan_overhead):
+    total_time = []
     for datasetidx in range(0,len(datasets_for_inputfile)):
         dataset = datasets_for_inputfile[datasetidx]
         optimized_scan_params = optimized_scan_params_summary[datasetidx]
         optimized_dwelltime = optimized_dwelltime_summary[datasetidx]
+        num_scans = len(lab_ref_points[datasetidx])
         if dataset['scantype'] == 0 :
             dataset_time = (num_scans * (optimized_dwell + per_scan_overhead))
         elif dataset['scantype'] == 1 or 4 or 6 :
@@ -28,14 +27,15 @@ def calculate_dataset_collectiontimes(datasets_for_inputfile, num_scans, optimiz
             #optimized_scan_params[4] = numframes1 , optimized_scan_params[8] - numframes2 #will make more sense with class
         elif dataset['scantype'] == 2 or 3 or 5 : 
             dataset_time = (num_scans * per_scan_overhead) + (num_scans * ((optimized_scan_params[4] * optimized_dwelltime)*(optimized_scan_params[8]))) + (optimized_scan_params[8]*per_scan_overhead)
-    print("Dataset %d will take approximately %f hours to complete" % (dataset['dataset_ID'], dataset_time/60/60))
+        print("Dataset %d has %d scans and will take approximately %f hours to complete" % (dataset['dataset_ID'], num_scans, dataset_time/60/60))
+        total_time.append(dataset_time)
+    print("The entire inputfile array will take approx. %f hours to complete" % ((sum(total_time)/60/60)))
     return
 
-def combine_and_write_datasets(datasets_for_inputfile, lab_ref_points, f, ome, omeoff): 
+def combine_and_write_datasets(datasets_for_inputfile, lab_ref_points, f): 
     optimized_scan_params_summary, optimized_dwelltime_summary = update_scan_params(datasets_for_inputfile)
-    print ("The number of scans is %d" % len(lab_ref_points[0]))
-    calculate_dataset_collectiontimes(datasets_for_inputfile, len(lab_ref_points[0]), optimized_scan_params_summary, optimized_dwelltime_summary, per_scan_overhead)
-    datasets_for_writer = tuple_dataset_values(datasets_for_inputfile,lab_ref_points, optimized_dwelltime_summary, optimized_scan_params_summary, f, ome = ome, omeoff = omeoff)
+    calculate_dataset_collectiontimes(datasets_for_inputfile, lab_ref_points, optimized_scan_params_summary, optimized_dwelltime_summary, per_scan_overhead)
+    datasets_for_writer = tuple_dataset_values(datasets_for_inputfile,lab_ref_points, optimized_dwelltime_summary, optimized_scan_params_summary, f)
     write_OuputForSpec2024_with_append(datasets_for_writer)
 
     return
@@ -210,37 +210,32 @@ def update_scan_params(datasets_for_inputfile):
 ### input textfile writer ###
 #############################
 
-def tuple_dataset_values(datasets_for_inputfile, lab_ref_points, optimized_dwelltime_summary, optimized_scan_params_summary, f, ome = 0, omeoff = 0, IntStart = 1):
+def tuple_dataset_values(datasets_for_inputfile, lab_ref_points, optimized_dwelltime_summary, optimized_scan_params_summary, f, IntStart = 1):
     dataset_for_writer = []
     for idx in range(0,len(datasets_for_inputfile)):
         dataset = datasets_for_inputfile[idx]
         dwelltime = optimized_dwelltime_summary[idx]
         scan_params = optimized_scan_params_summary[idx]
-        values = (f, IntStart, dataset['dataset_ID'], dataset['configuration_no'], lab_ref_points[idx], ome, omeoff, dwelltime, dataset['horz_slit'], dataset['vert_slit'], dataset['detector_slits'], scan_params)
+        values = (f, IntStart, dataset['dataset_ID'], dataset['configuration_no'], lab_ref_points[idx], dwelltime, dataset['horz_slit'], dataset['vert_slit'], dataset['detector_slits'], scan_params)
         dataset_for_writer.append(values) 
 
     return dataset_for_writer
 
-def combine_data_input(f, IntStart, DataNo, Config,  XYZ, sq, offset, CtTime, bw, bh, rsgap_size,  Scan=0):
+def combine_data_input(f, IntStart, DataNo, Config,  XYZWs , CtTime, bw, bh, rsgap_size,  Scan=0):
     appended_scans = []
     ### Vectors from scalars ###
-    if np.isscalar(sq):
-        sq = np.ones(XYZ.shape[0]) * sq
-        
-    if np.isscalar(offset):
-        offset = np.ones(XYZ.shape[0]) * offset
     
     if np.isscalar(CtTime):
-        CtTime = np.ones(XYZ.shape[0]) * CtTime
+        CtTime = np.ones(XYZWs.shape[0]) * CtTime
         
     if np.isscalar(bw):
-        bw = np.ones(XYZ.shape[0]) * bw
+        bw = np.ones(XYZWs.shape[0]) * bw
         
     if np.isscalar(bh):
-        bh = np.ones(XYZ.shape[0]) * bh
+        bh = np.ones(XYZWs.shape[0]) * bh
     
     if np.isscalar(rsgap_size):
-        rsgap_size = np.ones(XYZ.shape[0]) * rsgap_size
+        rsgap_size = np.ones(XYZWs.shape[0]) * rsgap_size
     
     ### Default Scan
     if Scan == 0:
@@ -276,10 +271,10 @@ def combine_data_input(f, IntStart, DataNo, Config,  XYZ, sq, offset, CtTime, bw
             raise RuntimeError('Input Scan format is incorrect.')
     
     # 
-    for ii in range(XYZ.shape[0]):
+    for ii in range(XYZWs.shape[0]):
         
         core_string = '%d %d %d %f %f %f %f %f %f %f %f %f '
-        core_info   = ((ii+IntStart), DataNo, Config, XYZ[ii,0], XYZ[ii,1], XYZ[ii,2], sq[ii], offset[ii], CtTime[ii], bw[ii], bh[ii], rsgap_size[ii])
+        core_info   = ((ii+IntStart), DataNo, Config, XYZWs[ii,0], XYZWs[ii,1], XYZWs[ii,2], XYZWs[ii,3], XYZWs[ii,4], CtTime[ii], bw[ii], bh[ii], rsgap_size[ii])
         
         info_combined = ((core_string + scan_string) % (core_info + scan_info))
         appended_scans.append(info_combined)

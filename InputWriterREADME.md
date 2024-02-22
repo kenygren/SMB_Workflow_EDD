@@ -49,13 +49,11 @@ The InputWriter_template.py has the following structure:
         ##### This section is user-defined #######
         ##### See reference examples #############
         ##########################################
-0.0
-        omeoff = 0.0
  
         # lab_ref_points_<datasetno> is an array of points in the lab reference frame generated in this section:
 
-        lab_ref_points_1 = XYZAll 
-        lab_ref_points_2 = XYZAll2
+        lab_ref_points_1 = XYZWs
+        lab_ref_points_2 = XYZWs_2
 
         # ---------- configuration for each dataset  -----------
 
@@ -106,8 +104,8 @@ The InputWriter_template.py has the following structure:
 
         # ---------- write text array  -----------
 
-        datasets_for_inputfile = [config_dataset_1] #write in priority order
-        lab_ref_points = [lab_ref_points_1] #match with above priority order
+        datasets_for_inputfile = [config_dataset_1, config_dataset_2] #write in priority order
+        lab_ref_points = [lab_ref_points_1, lab_ref_points_2] #match with above priority order
 
         iwrite.combine_and_write_datasets(datasets_for_inputfile, lab_ref_points, f, ome, omeoff)
 
@@ -206,9 +204,24 @@ Two fields end up being changed to optimized the scan strategy:
     Due to the way data is collected during a flyscan by our system, the dwelltime needs to be optimized in order to achieve the desired flyscan intervals / collection behavior. Note: this value can be as much as a few seconds different than the targeted dwelltime - so be conservative in the targeted dwelltime. There are no user-defined options for how this optimization is performed. 
 
 
-### Creating Reference Point Arrays ###
+### Creating Reference Point List ###
 
-> I need to work with Chris to build this section
+A **Reference Point List** houses all the reference points for every **scan** that will be executed in the dataset. All scans move RELATIVE to this starting point. 
+
+The reference point list is *currently* defined in the *laboratory reference frame* (X-ray reference frame). 
+
+The resulting reference list should be formatted as a vertical stack, where the *number of rows* is the *number of total scans*: 
+        
+    reference_point_list = [[ Xlab, Ylab, Zlab, W, W-offset ]
+                            [ Xlab, Ylab, Zlab, W, W-offset ]    
+                            [ Xlab, Ylab, Zlab, W, W-offset ]
+                            [ Xlab, Ylab, Zlab, W, W-offset ]
+                            [ Xlab, Ylab, Zlab, W, W-offset ] 
+                            ...............
+                            [ Xlab, Ylab, Zlab, W, W-offset ]]
+
+Where each row has a unique [ X <sub>lab</sub>, Y<sub>lab</sub>, Z<sub>lab</sub>, W, Wcorr ] position. W, AKA "omega", is the rotation about lab Z and provides a value that "squares" the sample to the X-ray beam. The W-offset prescribes a relative omega position from the "squared" omega. 
+
 
 ### ScanTypes ###
 

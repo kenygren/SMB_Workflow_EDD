@@ -16,11 +16,13 @@ base_dir = ''
 filename_suffix = 'OutputForSpec_test_s1-1.txt'
 f = base_dir+filename_suffix
 
+################## Building Reference Points ###############
+
 ome = 0.210
 labx_ref = -4.69168
 laby_ref = 12.099
 labz_ref = -270.684
-omeoff = 0 
+omecorr = 0 
 
 ome = 0.210003
 Xcp = -4.69168
@@ -87,10 +89,20 @@ X = xx.flatten('F')
 Z = X.copy() * 0
 Y = yy.flatten('F')
 
-XYZ1 = np.vstack( (X.flatten('F'), Y.flatten('F'), 1 * Z.flatten('F')) )
-XYZAll  = np.vstack( (XYZ1[0] + sampXcp, XYZ1[1] + sampYcp, 1 * XYZ1[2] + rsampZ ) ).T
+W = X.copy()*0
+Wcorr = X.copy()*0
 
-lab_ref_points_1 = XYZAll
+XYZ1 = np.vstack( (X.flatten('F'), Y.flatten('F'), 1 * Z.flatten('F')) )
+
+XYZWs  = np.vstack( (XYZ1[0] + sampXcp, XYZ1[1] + sampYcp, 1 * XYZ1[2] + rsampZ , W + ome, Wcorr + omecorr)).T
+XYZWs_2 = XYZWs[23:29]
+
+print(XYZWs_2)
+
+########################################
+
+lab_ref_points_1 = XYZWs
+lab_ref_points_2 = XYZWs_2
 
 ####################################################################################################################################
 ##### PROVIDE CONFIGURATIONS FOR EACH SCAN #####
@@ -115,7 +127,28 @@ config_dataset_1 = {
     'dwelltime': 15
 }
 
-datasets_for_inputfile = [config_dataset_1] #write in priority order
-lab_ref_points = [lab_ref_points_1] #match with above priority order
+config_dataset_2 = {
+    'dataset_ID': 6,
+    'configuration_no': 3,
 
-iwrite.combine_and_write_datasets(datasets_for_inputfile, lab_ref_points, f, ome, omeoff)
+    'horz_slit': 0.08,
+    'vert_slit': 0.08,
+    'detector_slits': 0.08,
+
+    'scantype': 4,
+
+    'axis1': 'z',
+    'start1': -1,
+    'end1': 1,
+    'numframes1': 5,
+
+    'offbias': 'center',
+
+    'dwelltime': 12
+}
+
+datasets_for_inputfile = [config_dataset_1, config_dataset_2] #write in priority order
+lab_ref_points = [lab_ref_points_1, lab_ref_points_2] #match with above priority order
+
+iwrite.combine_and_write_datasets(datasets_for_inputfile, lab_ref_points, f)
+

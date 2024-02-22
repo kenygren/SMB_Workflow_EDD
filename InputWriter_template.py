@@ -13,10 +13,6 @@ import # --------- import dependecies ----------
         ##### This section is user-defined #######
         ##### See reference examples #############
         ##########################################
-        
-        ome = 0.0
-        omeoff = 0.0
-        omecorr = 0.5
 
         # lab_ref_points_<datasetno> is an array of points in the lab reference frame generated in this section:
 
@@ -75,4 +71,4 @@ import # --------- import dependecies ----------
         datasets_for_inputfile = [config_dataset_1, config_dataset_2] #write in priority order
         lab_ref_points = [lab_ref_points_1, lab_ref_points_2] #match with above priority order
 
-        iwrite.combine_and_write_datasets(datasets_for_inputfile, lab_ref_points, f, ome, omeoff)
+        iwrite.combine_and_write_datasets(datasets_for_inputfile, lab_ref_points, f)

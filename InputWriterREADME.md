@@ -108,7 +108,7 @@ The InputWriter_template.py has the following structure:
         datasets_for_inputfile = [config_dataset_1, config_dataset_2] #write in priority order
         lab_ref_points = [lab_ref_points_1, lab_ref_points_2] #match with above priority order
 
-        iwrite.combine_and_write_datasets(datasets_for_inputfile, lab_ref_points, f, ome, omeoff)
+        iwrite.combine_and_write_datasets(datasets_for_inputfile, lab_ref_points, f)
 
 ### Designing a dataset
 

@@ -12,7 +12,7 @@ This input file consists of many columns of data that can be described in 4 cate
 
 To generate an input textfile, the following two items must be populated/provided by the user:
 
--  *Reference Point List*
+-  *Reference Point Array*
 - *EDD Input Configuration Dictionary* 
 
 These items will be incorporated into an `InputWriter_template.py` templated script - designed to be edited by the user. 
@@ -141,21 +141,21 @@ The seven current scantypes are illustrated in the figure below:
 
 </small>
 
-### Creating Reference Point List ###
+### Creating Reference Point Array ###
 
-A **Reference Point List** houses all the reference points for every **scan** that will be executed in the dataset. All scans move RELATIVE to this starting point. 
+A **Reference Point Array** houses all the reference points for every **scan** that will be executed in the dataset. All scans move RELATIVE to this starting point. 
 
-The reference point list is *currently* defined in the *laboratory reference frame* (X-ray reference frame). 
+The reference point Array is *currently* defined in the *laboratory reference frame* (X-ray reference frame). 
 
-The resulting reference list should be formatted as a vertical stack, where the *number of rows* is the *number of total scans*: 
+The resulting reference array should be formatted as a vertical stack, where the *number of rows* is the *number of total scans*: 
         
-    reference_point_list = [[ Xlab, Ylab, Zlab, W, W-offset ]
-                            [ Xlab, Ylab, Zlab, W, W-offset ]    
-                            [ Xlab, Ylab, Zlab, W, W-offset ]
-                            [ Xlab, Ylab, Zlab, W, W-offset ]
-                            [ Xlab, Ylab, Zlab, W, W-offset ] 
-                            ...............
-                            [ Xlab, Ylab, Zlab, W, W-offset ]]
+    reference_point_array = np.array([[ Xlab, Ylab, Zlab, W, W-offset ]
+                                      [ Xlab, Ylab, Zlab, W, W-offset ]    
+                                      [ Xlab, Ylab, Zlab, W, W-offset ]
+                                      [ Xlab, Ylab, Zlab, W, W-offset ]
+                                      [ Xlab, Ylab, Zlab, W, W-offset ] 
+                                      ...............
+                                      [ Xlab, Ylab, Zlab, W, W-offset ]])
 
 Where each row has a unique [ X <sub>lab</sub>, Y<sub>lab</sub>, Z<sub>lab</sub>, W, Wcorr ] position. W, AKA "omega", is the rotation about lab Z and provides a value that "squares" the sample to the X-ray beam. The W-offset prescribes a relative omega position from the "squared" omega. 
 
@@ -262,7 +262,7 @@ Note on using dictionary : This file can also be made into a standalone textfile
 Two fields end up being changed to optimized the scan strategy: 
 1. The total distance a flyscan travels: 
        
-          total distance = abs(`start`) + abs(`end`) 
+          total distance = abs(`start` - `end`) 
     
     A new value will be calculated for the total distance that is optimized for the controls system. Depending on which values are meaningful to preserve from the "targeted" flyscan values, change in total distance "offset" from the optimization can be applied in one of three ways using the 'offbias' key: 
 
@@ -289,7 +289,8 @@ The `InputWriter_template.py` prints out a series of statements:
 - how long the scans should take
 
 See example here: 
-![printout](./figures/cliprout.png)
+
+![cli_prints](./figures/cliprout.png)
 
 ### Resulting Input Array ###
 

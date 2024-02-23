@@ -22,11 +22,11 @@ def calculate_dataset_collectiontimes(datasets_for_inputfile, lab_ref_points, op
         num_scans = len(lab_ref_points[datasetidx])
         if dataset['scantype'] == 0 :
             dataset_time = (num_scans * (optimized_dwell + per_scan_overhead))
-        elif dataset['scantype'] == 1 or 4 or 6 :
+        elif dataset['scantype'] in [1, 4, 6 ]:
             dataset_time = (num_scans * per_scan_overhead) + (num_scans * optimized_scan_params[4] * optimized_dwelltime)  
             #optimized_scan_params[4] = numframes1 , optimized_scan_params[8] - numframes2 #will make more sense with class
-        elif dataset['scantype'] == 2 or 3 or 5 : 
-            dataset_time = (num_scans * per_scan_overhead) + (num_scans * ((optimized_scan_params[4] * optimized_dwelltime)*(optimized_scan_params[8]))) + (optimized_scan_params[8]*per_scan_overhead)
+        elif dataset['scantype'] in [2 , 3 , 5] : 
+            dataset_time = (num_scans * per_scan_overhead) + (num_scans * ((optimized_scan_params[4] * optimized_dwelltime * optimized_scan_params[8])) + (optimized_scan_params[8] * per_scan_overhead))
         print("Dataset %d has %d scans and will take approximately %f hours to complete" % (dataset['dataset_ID'], num_scans, dataset_time/60/60))
         total_time.append(dataset_time)
     print("The entire inputfile array will take approx. %f hours to complete" % ((sum(total_time)/60/60)))
@@ -107,7 +107,7 @@ def update_start_end(start, end, offset, whereoffset = 'center'):
     return updatedstart, updatedend
 
 def calc_distance(start,stop):
-    distance = abs(start) + abs(stop)
+    distance = abs(start-stop)
     return distance
 
 
@@ -177,11 +177,11 @@ def update_scan_params(datasets_for_inputfile):
         if dataset['scantype'] == 0:
             optimized_scan_params = ScanType_0()
             optimized_dwelltime = dataset['dwelltime']
-            print_no_change()
+            print_no_change(dataset['dataset_ID'])
         elif dataset['scantype'] == 6:
-            optimized_scan_params = ScanType_6(dataset['axis1'], dataset['start1'], dataset['end1'], dataset['numframes1'], dataset['offbias'])
+            optimized_scan_params = ScanType_6(dataset['axis1'], dataset['start1'], dataset['end1'], dataset['numframes1'])
             optimized_dwelltime = dataset['dwelltime']
-            print_no_change()
+            print_no_change(dataset['dataset_ID'])
         else:
             if dataset['scantype'] == 1:
                 optimized_scan_params = ScanType_1(dataset['axis1'], dataset['start1'], dataset['end1'], dataset['numframes1'], dataset['offbias'])

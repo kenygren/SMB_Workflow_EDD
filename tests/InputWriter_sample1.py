@@ -84,6 +84,7 @@ XYZWs_2 = XYZWs[23:28]
 
 lab_ref_points_1 = XYZWs
 lab_ref_points_2 = XYZWs_2
+print(XYZWs_2)
 
 # ---------- EDD input configuration dictionary (one per dataset) -----------
 

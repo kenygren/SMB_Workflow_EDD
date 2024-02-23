@@ -262,7 +262,7 @@ Note on using dictionary : This file can also be made into a standalone textfile
 Two fields end up being changed to optimized the scan strategy: 
 1. The total distance a flyscan travels: 
        
-          total distance = abs(`start`) + abs(`end`) 
+          total distance = abs(`start` - `end`) 
     
     A new value will be calculated for the total distance that is optimized for the controls system. Depending on which values are meaningful to preserve from the "targeted" flyscan values, change in total distance "offset" from the optimization can be applied in one of three ways using the 'offbias' key: 
 

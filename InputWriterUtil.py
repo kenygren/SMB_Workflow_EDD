@@ -107,7 +107,7 @@ def update_start_end(start, end, offset, whereoffset = 'center'):
     return updatedstart, updatedend
 
 def calc_distance(start,stop):
-    distance = abs(start) + abs(stop)
+    distance = abs(start-stop)
     return distance
 
 

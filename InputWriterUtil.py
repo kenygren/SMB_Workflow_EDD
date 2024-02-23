@@ -177,11 +177,11 @@ def update_scan_params(datasets_for_inputfile):
         if dataset['scantype'] == 0:
             optimized_scan_params = ScanType_0()
             optimized_dwelltime = dataset['dwelltime']
-            print_no_change()
+            print_no_change(dataset['dataset_ID'])
         elif dataset['scantype'] == 6:
-            optimized_scan_params = ScanType_6(dataset['axis1'], dataset['start1'], dataset['end1'], dataset['numframes1'], dataset['offbias'])
+            optimized_scan_params = ScanType_6(dataset['axis1'], dataset['start1'], dataset['end1'], dataset['numframes1'])
             optimized_dwelltime = dataset['dwelltime']
-            print_no_change()
+            print_no_change(dataset['dataset_ID'])
         else:
             if dataset['scantype'] == 1:
                 optimized_scan_params = ScanType_1(dataset['axis1'], dataset['start1'], dataset['end1'], dataset['numframes1'], dataset['offbias'])

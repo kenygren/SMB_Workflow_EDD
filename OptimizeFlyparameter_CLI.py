@@ -5,9 +5,14 @@ import argparse
 
 motor_speed = 3937.01 #hardcoded motor speed for rsampX, rsampY, rsampZ
 
+def calculate_distance_from_desired_illumination_region(beamsize, illumination_region):
+    distance = illumination_region - beamsize
+    return distance
+
 def calculate_updated_distance_from_num_points(desired_numpts, desired_distance, motor_speed):
     # Calculate starting effective stepsize
-    stepsize = desired_distance / desired_numpts
+    intervals = desired_numpts-1
+    stepsize = desired_distance / intervals
 
     #calculate total steps required 
     total_steps_required = stepsize * motor_speed
@@ -19,7 +24,7 @@ def calculate_updated_distance_from_num_points(desired_numpts, desired_distance,
     newstepsize = nearest_integer_steps / motor_speed 
 
     # Calculate the updated distance based on the rounded steps
-    updated_distance = desired_numpts * newstepsize
+    updated_distance = intervals * newstepsize
 
     return updated_distance, newstepsize, desired_numpts
 
@@ -38,10 +43,12 @@ def calculate_updated_distance_from_desired_stepsize(desired_stepsize, desired_d
     #calculate interger number of points
     numpts = np.round(desired_distance / newstepsize)
 
+    new_numpts = numpts + 1
+
     # Calculate the updated distance 
     updated_distance = numpts * newstepsize
  
-    return updated_distance, newstepsize, numpts
+    return updated_distance, newstepsize, new_numpts
 
 
 def update_dwelltime(updated_distance, newstepsize, numpts, desired_dwelltime, motor_speed):
@@ -80,15 +87,18 @@ def main():
     group.add_argument("--stepsize", type=float, help="Desired step size in mm.")
     group.add_argument("--numpts", type=int, help="Desired number of points.")
 
-    parser.add_argument("--distance", type=float, required=True, help="Desired distance in mm.")
+    parser.add_argument("--distance", type=float, required=True, help="Desired distance to be illuminated in mm.")
     parser.add_argument("--dwelltime", type=float, help="Dwell time in seconds.")
+    parser.add_argument("--beamsize", type=float, required=True, help="size of beamsize in mm in dimension you are scanning.")
 
     args = parser.parse_args()
 
+    distance = args.distance 
+   # distance = calculate_distance_from_desired_illumination_region(args.beamsize,args.distance)
     if args.stepsize and args.numpts:
         print("Choose either a stepsize or number of points.")
     elif args.stepsize:
-        updated_distance, newstepsize, numpts = calculate_updated_distance_from_desired_stepsize(args.stepsize, args.distance, motor_speed)
+        updated_distance, newstepsize, numpts = calculate_updated_distance_from_desired_stepsize(args.stepsize, distance, motor_speed)
         print("Updated distance:", updated_distance)
         print("New step size:", newstepsize)
         print("Number of points", numpts)  
@@ -96,7 +106,7 @@ def main():
             newdwelltime, updated_distance, numpts, newdwelltime = update_dwelltime(updated_distance, newstepsize, numpts, args.dwelltime, motor_speed)
             print("Updated dwell time", newdwelltime)
     elif args.numpts:
-        updated_distance, newstepsize, numpts = calculate_updated_distance_from_num_points(args.numpts, args.distance, motor_speed)
+        updated_distance, newstepsize, numpts = calculate_updated_distance_from_num_points(args.numpts, distance, motor_speed)
         print("Updated distance:", updated_distance)
         print("New step size:", newstepsize)
         print("Number of points", numpts)
@@ -107,40 +117,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-"""
-###########
-#step 1: determine updated distance and number of points based on desired values: 
-###########
-#inputs for option 1: calculate from desired number of points & desired distance
-motor_speed = 3937.01 # steps per mm
-desired_distance = 1 # mm
-desired_numpts = 500
-
-updated_distance, newstepsize, numpts = calculate_updated_distance_from_num_points(desired_numpts, desired_distance, motor_speed)
-print("Updated distance:", updated_distance)
-print("New step size:", newstepsize)
-print("Number of points", numpts)
-
-#inputs for option 2: calculate values from desired stepsize & desired distance
-#desired_stepsize = 0.02
-motor_speed = 3937.01 # steps per mm
-#desired_distance = 1 # mm
-
-
-updated_distance, newstepsize, numpts = calculate_updated_distance_from_desired_stepsize(desired_stepsize, desired_distance, motor_speed)
-#print("Updated distance:", updated_distance)
-#print("New step size:", newstepsize)
-#print("Number of points", numpts)
-
-
-##########
-#step 2: calculate updated dwell time to achieve even interger frequency value with inputs from step 1
-##########
-desired_dwelltime = 10 # seconds 
-
-newdwelltime, updated_distance, numpts, newdwelltime = update_dwelltime(updated_distance, newstepsize, numpts, desired_dwelltime, motor_speed)
-print("Updated distance:", updated_distance)
-print("New step size:", newstepsize)
-print("Number of points", numpts)
-print("Updated dwell time", newdwelltime)
-"""

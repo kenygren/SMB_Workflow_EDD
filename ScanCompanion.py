@@ -65,13 +65,13 @@ def calculate_updated_distance_from_desired_stepsize(desired_stepsize, desired_d
 def update_dwelltime(updated_distance, newstepsize, numpts, desired_dwelltime, motor_speed):
 
     #calculate speed for desired dwell time with previously optimized distance and number of points
-    speed = ((updated_distance * motor_speed) / (desired_dwelltime * numpts))
+    speed = ((updated_distance * motor_speed) / (desired_dwelltime * numpts-1))
  
     #find closest even integer for speed
     even_int_speed = round_to_nearest_even(speed)
   
     #update dwelltime to compenstate for changes in integer speed
-    updated_dwelltime = ((updated_distance * motor_speed) / (even_int_speed * numpts))
+    updated_dwelltime = ((updated_distance * motor_speed) / (even_int_speed * numpts-1))
     safe_dwelltime = np.floor(updated_dwelltime * 1000) / 1000
 
     return updated_distance, newstepsize, numpts, safe_dwelltime
@@ -120,6 +120,7 @@ def main():
             updated_distance, newstepsize, numpts = calculate_updated_distance_from_desired_stepsize(args.stepsize, distance, motor_speed)
             illuminated_distance = calculate_illumination_distance_from_scan_distance(args.beamsize, updated_distance,scantype,newstepsize)
             print("Illuminated distance:", illuminated_distance)
+            print("scan_distance:", updated_distance)
             print("New step size:", newstepsize)
             print("Number of frames", numpts)  
             if args.dwelltime:
@@ -127,11 +128,12 @@ def main():
                 print("Updated dwell time", newdwelltime)
 
         elif args.numpts:
-            stepsize = (args.distance - args.beamsize) / args.numpts 
+            stepsize = (args.distance - args.beamsize) / (args.numpts-1) 
             distance = calculate_distance_from_desired_illumination_region(args.beamsize, args.distance, scantype, stepsize)
             updated_distance, newstepsize, numpts = calculate_updated_distance_from_num_points(args.numpts, distance, motor_speed)
             illuminated_distance = calculate_illumination_distance_from_scan_distance(args.beamsize, updated_distance,scantype,newstepsize)
             print("Illuminated distance:", illuminated_distance)
+            print("scan_distance:", updated_distance)
             print("New step size:", newstepsize)
             print("Number of frames", numpts)
             if args.dwelltime:
@@ -148,6 +150,7 @@ def main():
             updated_distance = args.stepsize * numberframes
             illuminated_distance = calculate_illumination_distance_from_scan_distance(args.beamsize, updated_distance,scantype,args.stepsize)
             print("Illuminated distance:", illuminated_distance)
+            print("scan_distance:", updated_distance)
             print("Stepsize", args.stepsize)
             print("Number of Frames", numberframes)
 
@@ -156,10 +159,11 @@ def main():
 
         if args.numpts:
             distance = args.distance - args.beamsize
-            stepsize = distance/args.numpts
-            updated_distance = stepsize * args.numpts
+            stepsize = distance/(args.numpts-1)
+            updated_distance = stepsize * (args.numpts-1)
             illuminated_distance = calculate_illumination_distance_from_scan_distance(args.beamsize, updated_distance,scantype,stepsize)
             print("Illuminated distance:", illuminated_distance)
+            print("scan_distance", updated_distance)
             print("Stepsize", stepsize)
             print("Number of Frames", args.numpts)
 

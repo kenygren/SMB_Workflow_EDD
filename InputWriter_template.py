@@ -1,6 +1,6 @@
 import # --------- import dependecies ----------
         import numpy as np
-        import InputWriterUtil as iwrite
+        import InputWriterUtility2 as iwrite
 
         # ---------- name input textfile -----------
         base_dir = ''

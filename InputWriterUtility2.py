@@ -13,6 +13,69 @@ per_scan_overhead = 5 # 4 for scans themselves, added 1 for motor motions
 #primary function: 
 ###################
 
+def combine_and_write_datasets(datasets_for_inputfile, lab_ref_points, f): 
+    optimized_scan_params_summary, optimized_dwelltime_summary = update_scan_params(datasets_for_inputfile)
+    calculate_dataset_collectiontimes(datasets_for_inputfile, lab_ref_points, optimized_scan_params_summary, optimized_dwelltime_summary, per_scan_overhead)
+    datasets_for_writer = tuple_dataset_values(datasets_for_inputfile,lab_ref_points, optimized_dwelltime_summary, optimized_scan_params_summary, f)
+    write_OuputForSpec2024_with_append(datasets_for_writer)
+    return
+
+
+###################
+#remap motor to integer index
+###################
+
+def get_axis_number(axis):
+    axis_mapping = {'x': 1, 'y': 2, 'z': 3, 'w': 4}
+    return axis_mapping.get(axis, None)
+
+def get_motor_speed(axis):
+    axis_mapping = {'x': motor_x_speed, 'y': motor_y_speed, 'z': motor_z_speed, 'w': motor_w_speed }
+    return axis_mapping.get(axis, None)
+
+
+###################
+#Get Direction and Motor Based Parameters
+###################
+
+def get_relevant_beam_dimension(datasets_for_inputfile, axis): 
+    for dataset in datasets_for_inputfile:
+            if axis == 'x':
+                relevant_beamsize = dataset['horz_slit']
+            elif axis == 'z':
+                relevant_beamsize = dataset['vert_slit']
+            elif axis == 'y':
+                relevant_beamsize = 0
+            elif axis == 'w':
+                relevant_beamsize = 0
+    else:
+        print("you've made a mistake")
+    return relevant_beamsize
+
+
+###################
+#Calculate Scan illumination regions for x, z motion
+###################
+
+def calculate_scan_distance_from_desired_illumination_distance(beamsize, illumination_distance, scantype, stepsize):    
+    if scantype == 'dscan':
+        distance = illumination_distance - beamsize
+    elif scantype == 'flyscan':
+        distance = illumination_distance - beamsize - stepsize
+    #distance = (input flight range) + (interval size) + (beam width)
+    return distance
+
+def calculate_illumination_distance_from_scan_distance(beamsize, scan_distance, scantype, stepsize): 
+    if scantype == 'dscan':
+        distance = scan_distance + beamsize
+    elif scantype == 'flyscan':
+        distance = scan_distance + beamsize + stepsize 
+    return distance
+
+###################
+#Get Dataset Times
+###################
+
 def calculate_dataset_collectiontimes(datasets_for_inputfile, lab_ref_points, optimized_scan_params_summary, optimized_dwelltime_summary, per_scan_overhead):
     total_time = []
     for datasetidx in range(0,len(datasets_for_inputfile)):
@@ -32,44 +95,6 @@ def calculate_dataset_collectiontimes(datasets_for_inputfile, lab_ref_points, op
     print("The entire inputfile array will take approx. %f hours to complete" % ((sum(total_time)/60/60)))
     return
 
-def combine_and_write_datasets(datasets_for_inputfile, lab_ref_points, f): 
-    optimized_scan_params_summary, optimized_dwelltime_summary = update_scan_params(datasets_for_inputfile)
-    calculate_dataset_collectiontimes(datasets_for_inputfile, lab_ref_points, optimized_scan_params_summary, optimized_dwelltime_summary, per_scan_overhead)
-    datasets_for_writer = tuple_dataset_values(datasets_for_inputfile,lab_ref_points, optimized_dwelltime_summary, optimized_scan_params_summary, f)
-    write_OuputForSpec2024_with_append(datasets_for_writer)
-
-    return
-
-###################
-#remap motor to integer index
-###################
-
-def get_axis_number(axis):
-    axis_mapping = {'x': 1, 'y': 2, 'z': 3, 'w': 4}
-    return axis_mapping.get(axis, None)
-
-def get_motor_speed(axis):
-    axis_mapping = {'x': motor_x_speed, 'y': motor_y_speed, 'z': motor_z_speed, 'w': motor_w_speed }
-    return axis_mapping.get(axis, None)
-
-###################
-#distance referenced to illumination volume vs. scan volume 
-###################
-
-def calculate_scan_distance_from_desired_illumination_distance(beamsize, illumination_distance, scantype, stepsize):
-    if scantype == 'dscan':
-        distance = illumination_distance - beamsize
-    elif scantype == 'flyscan':
-        distance = illumination_distance - beamsize - stepsize
-    #distance = (input flight range) + (interval size) + (beam width)
-    return distance
-
-def calculate_illumination_distance_from_scan_distance(beamsize, scan_distance, scantype, stepsize): 
-    if scantype == 'dscan':
-        distance = scan_distance + beamsize
-    elif scantype == 'flyscan':
-        distance = scan_distance + beamsize + stepsize 
-    return distance
 
 ###################
 #optimize scan parameter functions 
@@ -129,7 +154,6 @@ def calc_distance(start,stop):
     distance = abs(start-stop)
     return distance
 
-
 ###################
 #scantype parameter writers 
 ###################
@@ -178,10 +202,6 @@ def ScanType_5(axis1, start1, stop1, numframes1, axis2, start2, stop2, numframes
 
 def ScanType_6(axis, start, stop, numframes): #offsetbias = 'center'):
     axisint = get_axis_number(axis)
-    #distance = calc_distance(start,stop)
-    #updateddistance = calculate_updated_distance_from_num_points(numframes, distance, motor_speed)
-    #updatedstart, updatedstop = update_start_end(start, stop, updateddistance - distance, whereoffset=offsetbias)
-    #scanlist = (6, axisint, updatedstart, updatedstop, numframes)
     scanlist = (6, axisint, start, stop, numframes)
     return scanlist
 
@@ -198,53 +218,56 @@ def update_scan_params(datasets_for_inputfile):
             optimized_dwelltime = dataset['dwelltime']
             print_no_change(dataset['dataset_ID'])
         elif dataset['scantype'] == 6:
-
+            relevant_beamsize = get_relevant_beam_dimension(datasets_for_inputfile, dataset['axis1'])
             illumination_distance = calc_distance(dataset['start1'], dataset['end1'])
-            stepsize = (illumination_distance - dataset['horz_slit']) / (dataset['numframes1'] - 1)
-            scan_distance = calculate_scan_distance_from_desired_illumination_distance(dataset['horz_slit'], illumination_distance, 'dscan', stepsize)
+            stepsize = (illumination_distance - relevant_beamsize) / (dataset['numframes1'] - 1)
+            scan_distance = calculate_scan_distance_from_desired_illumination_distance(relevant_beamsize, illumination_distance, 'dscan', stepsize)
             offset = scan_distance - illumination_distance
             scan_start1, scan_end1 = update_start_end(dataset['start1'],dataset['end1'], offset, whereoffset = 'center')
 
             optimized_scan_params = ScanType_6(dataset['axis1'], scan_start1, scan_end1, dataset['numframes1'])
             optimized_dwelltime = dataset['dwelltime']
-            print_no_change(dataset['dataset_ID'])
+            print_no_change(dataset['dataset_ID'])   
         else:
             if dataset['scantype'] == 1:
+                relevant_beamsize = get_relevant_beam_dimension(datasets_for_inputfile, dataset['axis1'])
                 illumination_distance = calc_distance(dataset['start1'], dataset['end1'])
-                stepsize = (illumination_distance - dataset['horz_slit']) / (dataset['numframes1'] - 1)
-                scan_distance = calculate_scan_distance_from_desired_illumination_distance(dataset['horz_slit'], illumination_distance, 'flyscan', stepsize)
-                offset = scan_distance - illumination_distance
-                scan_start, scan_end = update_start_end(dataset['start1'],dataset['end1'], offset, whereoffset = 'center')
-                
-                optimized_scan_params = ScanType_1(dataset['axis1'], scan_start, scan_end, dataset['numframes1'], dataset['offbias'])
-            
-            elif dataset['scantype'] == 2:
-
-                illumination_distance = calc_distance(dataset['start1'], dataset['end1'])
-                stepsize = (illumination_distance - dataset['horz_slit']) / (dataset['numframes1'] - 1)
-                scan_distance = calculate_scan_distance_from_desired_illumination_distance(dataset['horz_slit'], illumination_distance, 'flyscan', stepsize)
+                stepsize = (illumination_distance - relevant_beamsize) / (dataset['numframes1'] - 1)
+                scan_distance = calculate_scan_distance_from_desired_illumination_distance(relevant_beamsize, illumination_distance, 'flyscan', stepsize)
                 offset = scan_distance - illumination_distance
                 scan_start1, scan_end1 = update_start_end(dataset['start1'],dataset['end1'], offset, whereoffset = 'center')
                 
+                optimized_scan_params = ScanType_1(dataset['axis1'], scan_start1, scan_end1, dataset['numframes1'], dataset['offbias'])
+
+            elif dataset['scantype'] == 2:
+                relevant_beamsize = get_relevant_beam_dimension(datasets_for_inputfile, dataset['axis1'])
+                illumination_distance = calc_distance(dataset['start1'], dataset['end1'])
+                stepsize = (illumination_distance - relevant_beamsize) / (dataset['numframes1'] - 1)
+                scan_distance = calculate_scan_distance_from_desired_illumination_distance(relevant_beamsize, illumination_distance, 'flyscan', stepsize)
+                offset = scan_distance - illumination_distance
+                scan_start1, scan_end1 = update_start_end(dataset['start1'],dataset['end1'], offset, whereoffset = 'center')
+                
+                relevant_beamsize2 = get_relevant_beam_dimension(datasets_for_inputfile, dataset['axis2'])
                 illumination_distance = calc_distance(dataset['start2'], dataset['end2'])
-                stepsize = (illumination_distance - dataset['horz_slit']) / (dataset['numframes2'] - 1)
-                scan_distance = calculate_scan_distance_from_desired_illumination_distance(dataset['horz_slit'], illumination_distance, 'dscan', stepsize)
+                stepsize = (illumination_distance - relevant_beamsize2) / (dataset['numframes2'] - 1)
+                scan_distance = calculate_scan_distance_from_desired_illumination_distance(relevant_beamsize2, illumination_distance, 'dscan', stepsize)
                 offset = scan_distance - illumination_distance
                 scan_start2, scan_end2 = update_start_end(dataset['start2'],dataset['end2'], offset, whereoffset = 'center')
 
                 optimized_scan_params = ScanType_2(dataset['axis1'], scan_start1, scan_end1, dataset['numframes1'],dataset['axis2'], scan_start2, scan_end2, dataset['numframes2'], dataset['offbias'])
             
             elif dataset['scantype'] == 3:
-
+                relevant_beamsize = get_relevant_beam_dimension(datasets_for_inputfile, dataset['axis1'])
                 illumination_distance = calc_distance(dataset['start1'], dataset['end1'])
-                stepsize = (illumination_distance - dataset['horz_slit']) / (dataset['numframes1'] - 1)
-                scan_distance = calculate_scan_distance_from_desired_illumination_distance(dataset['horz_slit'], illumination_distance, 'flyscan', stepsize)
+                stepsize = (illumination_distance - relevant_beamsize) / (dataset['numframes1'] - 1)
+                scan_distance = calculate_scan_distance_from_desired_illumination_distance(relevant_beamsize, illumination_distance, 'flyscan', stepsize)
                 offset = scan_distance - illumination_distance
                 scan_start1, scan_end1 = update_start_end(dataset['start1'],dataset['end1'], offset, whereoffset = 'center')
                 
+                relevant_beamsize2 = get_relevant_beam_dimension(datasets_for_inputfile, dataset['axis2'])
                 illumination_distance = calc_distance(dataset['start2'], dataset['end2'])
-                stepsize = (illumination_distance - dataset['horz_slit']) / (dataset['numframes2'] - 1)
-                scan_distance = calculate_scan_distance_from_desired_illumination_distance(dataset['horz_slit'], illumination_distance, 'dscan', stepsize)
+                stepsize = (illumination_distance - relevant_beamsize2) / (dataset['numframes2'] - 1)
+                scan_distance = calculate_scan_distance_from_desired_illumination_distance(relevant_beamsize2, illumination_distance, 'dscan', stepsize)
                 offset = scan_distance - illumination_distance
                 scan_start2, scan_end2 = update_start_end(dataset['start2'],dataset['end2'], offset, whereoffset = 'center')
 
@@ -252,26 +275,27 @@ def update_scan_params(datasets_for_inputfile):
                 optimized_scan_params = ScanType_3(dataset['axis1'], scan_start1, scan_end1, dataset['numframes1'],dataset['axis2'], scan_start2, scan_end2, dataset['numframes2'], dataset['offbias'])
             
             elif dataset['scantype'] == 4:
-
+                relevant_beamsize = get_relevant_beam_dimension(datasets_for_inputfile, dataset['axis1'])
                 illumination_distance = calc_distance(dataset['start1'], dataset['end1'])
-                stepsize = (illumination_distance - dataset['horz_slit']) / (dataset['numframes1'] - 1)
-                scan_distance = calculate_scan_distance_from_desired_illumination_distance(dataset['horz_slit'], illumination_distance, 'flyscan', stepsize)
+                stepsize = (illumination_distance - relevant_beamsize) / (dataset['numframes1'] - 1)
+                scan_distance = calculate_scan_distance_from_desired_illumination_distance(relevant_beamsize, illumination_distance, 'flyscan', stepsize)
                 offset = scan_distance - illumination_distance
                 scan_start, scan_end = update_start_end(dataset['start1'],dataset['end1'], offset, whereoffset = 'center')
 
                 optimized_scan_params = ScanType_4(dataset['axis1'], scan_start, scan_end, dataset['numframes1'], dataset['offbias'])
 
             elif dataset['scantype'] == 5:
-
+                relevant_beamsize = get_relevant_beam_dimension(datasets_for_inputfile, dataset['axis1'])
                 illumination_distance = calc_distance(dataset['start1'], dataset['end1'])
-                stepsize = (illumination_distance - dataset['horz_slit']) / (dataset['numframes1'] - 1)
-                scan_distance = calculate_scan_distance_from_desired_illumination_distance(dataset['horz_slit'], illumination_distance, 'flyscan', stepsize)
+                stepsize = (illumination_distance - relevant_beamsize) / (dataset['numframes1'] - 1)
+                scan_distance = calculate_scan_distance_from_desired_illumination_distance(relevant_beamsize, illumination_distance, 'flyscan', stepsize)
                 offset = scan_distance - illumination_distance
                 scan_start1, scan_end1 = update_start_end(dataset['start1'],dataset['end1'], offset, whereoffset = 'center')
                 
+                relevant_beamsize2 = get_relevant_beam_dimension(datasets_for_inputfile, dataset['axis2'])
                 illumination_distance = calc_distance(dataset['start2'], dataset['end2'])
-                stepsize = (illumination_distance - dataset['horz_slit']) / (dataset['numframes2'] - 1)
-                scan_distance = calculate_scan_distance_from_desired_illumination_distance(dataset['horz_slit'], illumination_distance, 'dscan', stepsize)
+                stepsize = (illumination_distance - relevant_beamsize2) / (dataset['numframes2'] - 1)
+                scan_distance = calculate_scan_distance_from_desired_illumination_distance(relevant_beamsize2, illumination_distance, 'dscan', stepsize)
                 offset = scan_distance - illumination_distance
                 scan_start2, scan_end2 = update_start_end(dataset['start2'],dataset['end2'], offset, whereoffset = 'center')
 
@@ -284,11 +308,11 @@ def update_scan_params(datasets_for_inputfile):
             #convert scan parameters into illumination lengths: 
             scan_distance = calc_distance(optimized_scan_params[2], optimized_scan_params[3])
             stepsize = scan_distance / (dataset['numframes1'] - 1)
-            illumination_distance = calculate_illumination_distance_from_scan_distance(dataset['horz_slit'], scan_distance, 'flyscan', stepsize)
+            illumination_distance = calculate_illumination_distance_from_scan_distance(relevant_beamsize, scan_distance, 'flyscan', stepsize)
             offset = illumination_distance - scan_distance
             optimized_illumination_vol_start, optimized_illumination_vol_end = update_start_end(optimized_scan_params[2], optimized_scan_params[3], offset, whereoffset = 'center')
 
-            scan_distance = calculate_scan_distance_from_desired_illumination_distance(dataset['horz_slit'], illumination_distance, 'flyscan', stepsize)
+            scan_distance = calculate_scan_distance_from_desired_illumination_distance(relevant_beamsize, illumination_distance, 'flyscan', stepsize)
             offset = scan_distance - illumination_distance
             scan_start1, scan_end1 = update_start_end(dataset['start1'],dataset['end1'], offset, whereoffset = 'center')
 
@@ -463,4 +487,3 @@ class scan_parameters:
         self.numframes2 = config['numframes2']
         self.offsetbias = config['offsetbias']
         self.ctime = config['dwelltime']
-

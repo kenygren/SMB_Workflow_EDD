@@ -3,7 +3,7 @@ import sys
 sys.path.append('../')  # Add the parent directory to the Python path
 
 import numpy as np
-import InputWriterUtil as iwrite
+import InputWriterUtility2 as iwrite
 
 # ---------- name input textfile -----------
 
@@ -92,16 +92,16 @@ config_dataset_1 = {
     'dataset_ID': 1,
     'configuration_no': 1,
 
-    'horz_slit': 0.05,
-    'vert_slit': 0.05,
+    'horz_slit': 0.5,
+    'vert_slit': 0.5,
     'detector_slits': 0.05,
 
     'scantype': 1,
 
-    'axis1': 'z',
+    'axis1': 'w',
     'start1': -5,
     'end1': 5,
-    'numframes1': 18,
+    'numframes1': 10,
 
     'offbias': 'fix_end',
 
@@ -119,7 +119,7 @@ config_dataset_2 = {
     'scantype': 4,
 
 
-    'axis1': 'z',
+    'axis1': 'y',
     'start1': -1,
     'end1': 1,
     'numframes1': 5,

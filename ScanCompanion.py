@@ -3,7 +3,7 @@ import argparse
 
 #functions
 
-motor_speed = 3937.01 #hardcoded motor speed for rsampX, rsampY, rsampZ
+motor_speed = 2000.0#3937.01 #hardcoded motor speed for rsampX, rsampY, rsampZ
 
 def calculate_distance_from_desired_illumination_region(beamsize, illumination_region, scantype, stepsize):
     if scantype == 'dscan':
@@ -123,9 +123,11 @@ def main():
             print("scan_distance:", updated_distance)
             print("New step size:", newstepsize)
             print("Number of frames", numpts)  
+            print("Want this as a SPEC scan? Try 'flydscan  <flymotor>  %f  %f  %d  <dwelltime>'" % (-(illuminated_distance/2), (illuminated_distance/2), (numpts-1)))
             if args.dwelltime:
                 newdwelltime, updated_distance, numpts, newdwelltime = update_dwelltime(updated_distance, newstepsize, numpts, args.dwelltime, motor_speed)
                 print("Updated dwell time", newdwelltime)
+                print("Want this as a SPEC scan? Try 'flyscan  <motor>  %f  %f  %d  %f'" % (-(illuminated_distance/2), illuminated_distance/2, numpts-1, newdwelltime ))
 
         elif args.numpts:
             stepsize = (args.distance - args.beamsize) / (args.numpts-1) 
@@ -136,9 +138,12 @@ def main():
             print("scan_distance:", updated_distance)
             print("New step size:", newstepsize)
             print("Number of frames", numpts)
+            print("Want this as a SPEC scan? Try 'flydscan  <flymotor>  %f  %f  %d  <dwelltime>'" % (-(illuminated_distance/2), (illuminated_distance/2), (numpts-1)))
+
             if args.dwelltime:
                 newdwelltime, updated_distance, numpts, newdwelltime = update_dwelltime(updated_distance, newstepsize, numpts, args.dwelltime, motor_speed)
                 print("Updated dwell time", newdwelltime)
+                print("Want this as a SPEC scan? Try 'flyscan  <motor>  %f  %f  %d  %f'" % (-(illuminated_distance/2), illuminated_distance/2, numpts-1, newdwelltime ))
 
     if args.dscan:
         scantype = 'dscan'
@@ -153,9 +158,11 @@ def main():
             print("scan_distance:", updated_distance)
             print("Stepsize", args.stepsize)
             print("Number of Frames", numberframes)
+            print("Want this as a SPEC scan? Try 'dscan  <motor>  %f  %f  %d  <dwelltime>'" % (-(illuminated_distance/2), (illuminated_distance/2), (numberframes-1)))
 
             if args.dwelltime:
                 print("Updated dwell time", args.dwelltime)
+                print("Want this as a SPEC scan? Try 'dscan  <motor>  %f  %f  %d  %f'" % (-(illuminated_distance/2), illuminated_distance/2, numberframes-1, args.dwelltime ))
 
         if args.numpts:
             distance = args.distance - args.beamsize
@@ -166,9 +173,11 @@ def main():
             print("scan_distance", updated_distance)
             print("Stepsize", stepsize)
             print("Number of Frames", args.numpts)
+            print("Want this as a SPEC scan? Try 'dscan  <motor>  %f  %f  %d  <dwelltime>'" % (-(illuminated_distance/2), (illuminated_distance/2), (args.numpts-1)))
 
             if args.dwelltime:
                 print("Updated dwell time", args.dwelltime)
+                print("Want this as a SPEC scan? Try 'dscan  <motor>  %f  %f  %d  %f'" % (-(illuminated_distance/2), illuminated_distance/2, args.numpts-1, args.dwelltime ))
 
 
 if __name__ == "__main__":

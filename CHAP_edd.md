@@ -6,14 +6,14 @@
 
 The 23-element edd detector and relevant reference frames are shown in the schematic below: 
  
-![alt text](edd_detector-1.png) Figure 1: 23-element detector setup. *Note: the direction of eta and the increment of detector ID have opposite directions along the arc.* 
+![alt text](figures/edd_detector.png) Figure 1: 23-element detector setup. *Note: the direction of eta and the increment of detector ID have opposite directions along the arc.* 
 
 The ID1A3 EDD detector has 23 elements in an arc. Although the detector and slits are designed to be high precision, each detector can be calibrated independently to determine a refined 2theta angle.
 
 
 Note: As of cycle 2024-3, only 17/23 detectors are commissioned for strain analysis. This chart indicates which detectors are currently operational: 
 
-![alt text](cycle2024-3_gooddet-1.png)
+![alt text](figures/cycle2024-3_gooddet.png)
 
 ## CHAP Workflow Basics
 

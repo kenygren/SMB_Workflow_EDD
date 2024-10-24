@@ -166,6 +166,24 @@ Now the peaks will be fit and the energy will be scaled for the detector channel
 ![energyfits](<figures/energyfits.png>)
 *A good calibration will show a well-fit peak and a reasonable linear fit*
 
+#### Running the Two-theta Calibration
+
+Run the two-theta calibration by using pipeline flag (-p) and the name of the pipeline you want (tth) to run within your detector_detector.yaml:  
+
+        CHAP detector_calibration.yaml -p tth
+
+If **interactive: true** in the yaml, then the following interactive windows will pop-up for each detector: 
+
+*Find baseline for background subtraction*
+
+<img src=figures/energybaseline.png width="600">
+
+*The log(lambda) term can be used to change the baseline sensitivity to the shape/structure of the spectra.* 
+
+**Confirm** when you are happy with the baseline fit. 
+
+
+
 
 
 

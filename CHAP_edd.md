@@ -48,7 +48,120 @@ Each detector needs to have two calibrations performed:
 
  - **TwoTheta calibration**: this procedure determines the exact two-theta angle (AKA take-off angle) of the detector and downstream slit assembly with respect to the sample by fitting the *diffraction peaks* of a material standard (typically CeO2). 
 
- To run the detector calibration. 
+ To run the detector calibration, first create/edit a yaml with the pipeline items for energy and/or tth calibrations: 
+
+
+    #detector_calibration.yaml
+
+    #Basic configuration
+      config:
+      root: .
+      outputdir: out 
+      interactive: true 
+      log_level: debug
+      profile: false
+
+    #Energy Calibration Pipeline 
+    energy: 
+
+      # Read the detector data
+      - common.SpecReader:
+          config:
+            station: id1a3
+            experiment_type: EDD
+            spec_scans:
+              - spec_file: /nfs/chess/id1a3/2024-3/lastname-1234-a/ceo2-1016-50um-1/spec.log
+                scan_numbers: 1
+
+      # Perform energy calibration
+      - edd.MCAEnergyCalibrationProcessor:
+        background: auto
+        config:
+          peak_energies: [34.28, 34.72, 39.26] #fluorescence peaks of ceo2
+          fit_index_ranges: [[650, 850]] #range of channels that peak energies should be found over
+          max_peak_index: 1
+          #list all detectors you want to have calibrated
+            detectors: 
+              - id: 12 #eta 90
+              - id: 22 #eta 0
+            baseline: true
+            background: linear
+            save_figures: true
+            schema: edd.models.MCAEnergyCalibrationConfig
+
+      # Save the calibration configuration at the only-energy-calibrated stage
+        - common.YAMLWriter:
+          filename: energy_calibration_result.yaml
+          force_overwrite: true
+
+    #Two-theta Calibration Pipeline
+    tth:
+
+      # Read the tth calibration spec configuration and the 
+      # calibration configuration at the only-energy-calibrated stage
+      - pipeline.MultiplePipelineItem:
+        items:
+          - common.SpecReader:
+              config:
+              station: id1a3
+              experiment_type: EDD
+              spec_scans:
+                - spec_file: /nfs/chess/id1a3/2024-3/lastname-1234-a/ceo2-1016-50um-1/spec.log
+                  scan_numbers: 1
+          - common.YAMLReader:
+              filename: out/energy_calibration_result.yaml
+              schema: edd.models.MCATthCalibrationConfig
+
+      # Perform the tth calibration
+      - edd.MCATthCalibrationProcessor:
+          calibration_method: direct_fit_residual
+          tth_initial_guess: 5.6 #from setup 
+          include_energy_ranges:
+            - - 65.0
+              - 140.0
+          baseline: true
+          background: linear
+          fwhm_min: 3
+          fwhm_max: 25
+          save_figures: true
+
+      # Save the energy-and-tth-calibrated calibration configuration
+      - common.YAMLWriter:
+          filename: tth_calibration_result.yaml
+          force_overwrite: true
+
+        
+#### Running the Energy Calibration
+
+Run the energy calibration by using pipeline flag (-p) and the name of the pipeline you want (energy) to run within your detector_detector.yaml:  
+
+        CHAP detector_calibration.yaml -p energy
+
+If **interactive: true** in the yaml, then the following interactive windows will pop-up for each detector: 
+
+*Find baseline for background subtraction*
+![energybaseline](<Screenshot 2024-10-24 at 5.58.25 PM-1.png>)
+*The log(lambda) term can be used to change the baseline sensitivity to the shape/structure of the spectra.* 
+
+**Confirm** when you are happy with the baseline fit. 
+
+*Confirm Peak range for fluorecence peaks*
+![energyrange](<Screenshot 2024-10-24 at 5.59.05 PM-1.png>)
+
+The range is populated from the yaml and typically is NOT changed. For this step we are ONLY looking to use the fluorecence peaks of the CeO2 - NOT the diffraction peaks. 1A3 has an energy range of 50-200 keV entering the hutch, so all X-ray energies below 50 are likely from fluorescence, not diffraction peaks. 
+
+**Confirm** when you have the correct range (if you are using CeO2 as the only calibrant, your included range should look similar to this image). 
+
+*Confirm peak positions are near the peaks in the data*
+![energypeakpositions](<Screenshot 2024-10-24 at 5.59.31 PM-1.png>)
+
+**Confirm** the red lines correspond to peaks in the data. 
+
+Now the peaks will be fit and the energy will be scaled for the detector channels. The output of this optimization will pop up. This image will be saved in your output director if **save_figures: true** under the "**energy:**" pipeline. 
+
+![energyfits](<Screenshot 2024-10-24 at 5.59.45 PM-1.png>)
+*A good calibration will show a well-fit peak and a reasonable linear fit*
+
 
 
 

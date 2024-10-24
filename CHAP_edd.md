@@ -140,26 +140,26 @@ Run the energy calibration by using pipeline flag (-p) and the name of the pipel
 If **interactive: true** in the yaml, then the following interactive windows will pop-up for each detector: 
 
 *Find baseline for background subtraction*
-![energybaseline](<Screenshot 2024-10-24 at 5.58.25 PM-1.png>)
+![energybaseline](<energybaseline.png>)
 *The log(lambda) term can be used to change the baseline sensitivity to the shape/structure of the spectra.* 
 
 **Confirm** when you are happy with the baseline fit. 
 
 *Confirm Peak range for fluorecence peaks*
-![energyrange](<Screenshot 2024-10-24 at 5.59.05 PM-1.png>)
+![energyrange](<energyrange.png>)
 
 The range is populated from the yaml and typically is NOT changed. For this step we are ONLY looking to use the fluorecence peaks of the CeO2 - NOT the diffraction peaks. 1A3 has an energy range of 50-200 keV entering the hutch, so all X-ray energies below 50 are likely from fluorescence, not diffraction peaks. 
 
 **Confirm** when you have the correct range (if you are using CeO2 as the only calibrant, your included range should look similar to this image). 
 
 *Confirm peak positions are near the peaks in the data*
-![energypeakpositions](<Screenshot 2024-10-24 at 5.59.31 PM-1.png>)
+![energypeakpositions](<energypeaks.png>)
 
 **Confirm** the red lines correspond to peaks in the data. 
 
 Now the peaks will be fit and the energy will be scaled for the detector channels. The output of this optimization will pop up. This image will be saved in your output director if **save_figures: true** under the "**energy:**" pipeline. 
 
-![energyfits](<Screenshot 2024-10-24 at 5.59.45 PM-1.png>)
+![energyfits](<energyfits.png>)
 *A good calibration will show a well-fit peak and a reasonable linear fit*
 
 

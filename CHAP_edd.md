@@ -13,7 +13,7 @@ The ID1A3 EDD detector has 23 elements in an arc. Although the detector and slit
 
 Note: As of cycle 2024-3, only 17/23 detectors are commissioned for strain analysis. This chart indicates which detectors are currently operational: 
 
-![alt text](figures/cycle2024-3_gooddet.png)
+![alt text](figures/goodbad_23element.png)
 
 ## CHAP Workflow Basics
 

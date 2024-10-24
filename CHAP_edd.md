@@ -166,6 +166,8 @@ Now the peaks will be fit and the energy will be scaled for the detector channel
 ![energyfits](<figures/energyfits.png>)
 *A good calibration will show a well-fit peak and a reasonable linear fit*
 
+The results are populated for the energy fields only in the **energy_calibration_result.yaml**. 
+
 #### Running the Two-theta Calibration
 
 Run the two-theta calibration by using pipeline flag (-p) and the name of the pipeline you want (tth) to run within your detector_detector.yaml:  
@@ -182,8 +184,25 @@ If **interactive: true** in the yaml, then the following interactive windows wil
 
 **Confirm** when you are happy with the baseline fit. 
 
+*Provide estimated tth value*
 
+<img src=figures/tthpeaks.png width="600">
 
+*The peak positions should align with the projected hkl planes (dotted lines). Modify the tth value in the window until they are roughly centered* 
+
+**Confirm** when you are happy with the tth value. 
+
+*Provide range overwhich to perform the tth fit*
+
+<img src=figures/tthrange.png width="600">
+
+*Include the range you plan on using during data reduction of your actual sample. The range should not be lower than 50keV since the incident beam does not have energies lower than 50 keV. The peaks you see at the lower energies are likely fluorescence peaks*
+
+After the peak fitting process, the optimized tth and fit values will be populated in the **tth_calilbration_result.yml**. This is the same yaml structure as the energy_calibration_result.yml, but now the tth fit parameters are updated. 
+
+The fits will pop up at the end of this pipeline.  This image will be saved in your output director if **save_figures: true** under the "**tth:**" pipeline. 
+
+<img src=figures/tthfits.png width="600">
 
 
 

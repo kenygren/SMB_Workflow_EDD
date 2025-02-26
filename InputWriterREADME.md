@@ -93,10 +93,10 @@ The InputWriter_template.py has the following structure:
             'end1': 0.5,
             'numframes1': 5,
 
-            'axis1': 'z',
-            'start1': -0.5,
-            'end1': 0.5,
-            'numframes1': 5,
+            'axis2': 'z',
+            'start2': -0.5,
+            'end2': 0.5,
+            'numframes2': 5,
 
             'offbias': 'fix_end',
 

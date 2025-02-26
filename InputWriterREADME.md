@@ -192,10 +192,10 @@ An example annotated configuration dictionary is below for dataset '4' made up o
             'end1': 0.5,  #scantype specific 
             'numframes1': 5,  #scantype specific 
 
-            'axis1': 'z',  #scantype specific 
-            'start1': -0.5,  #scantype specific 
-            'end1': 0.5,  #scantype specific 
-            'numframes1': 5,  #scantype specific 
+            'axis2': 'z',  #scantype specific 
+            'start2': -0.5,  #scantype specific 
+            'end2': 0.5,  #scantype specific 
+            'numframes2': 5,  #scantype specific 
 
             # -------optimizer fixed position -------
             'offbias': 'fix_end', #scantype specific - hold 'center', 'fix_start', or 'fix_end'
